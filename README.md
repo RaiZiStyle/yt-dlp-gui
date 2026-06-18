@@ -8,6 +8,7 @@
 2. 
 
 # Issues : 
+- setFixedSize & setMinimumSize not working.
 
 
 

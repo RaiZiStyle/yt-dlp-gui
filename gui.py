@@ -27,12 +27,16 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("yt-dlp GUI")
         self.resize(800, 650)
+        self.setFixedSize(800, 650)  # ← bloque toute tentative de resize
 
         central = QWidget()
+        central.setMinimumSize(780, 620)  # ← sur le widget central
         self.setCentralWidget(central)
 
         main_layout = QVBoxLayout(central)
         main_layout.setSpacing(10)
+        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  # ← ajoute ça
+
 
         # ==================================================
         # URL
@@ -113,16 +117,6 @@ class MainWindow(QMainWindow):
 
         self.quality_combo = QComboBox()
 
-        self.quality_combo.addItems(
-            [
-                "2160p MP4",
-                "1440p MP4",
-                "1080p MP4",
-                "720p MP4",
-                "480p MP4",
-            ]
-        )
-
         #
         # Destination
         #
@@ -164,8 +158,8 @@ class MainWindow(QMainWindow):
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(62)
 
-        self.speed_label = QLabel("Téléchargement : 3.2 MB/s")
-        self.eta_label = QLabel("Temps restant : 00:12")
+        self.speed_label = QLabel("Téléchargement : TODO MB/s")
+        self.eta_label = QLabel("Temps restant : TODO")
 
         progress_layout.addWidget(self.progress_bar)
         progress_layout.addWidget(self.speed_label)
@@ -217,31 +211,12 @@ class MainWindow(QMainWindow):
 
         self.quality_combo.clear()
 
-        if self.video_radio.isChecked():
-
-            self.quality_combo.addItems(
-                [
-                    "2160p MP4",
-                    "1440p MP4",
-                    "1080p MP4",
-                    "720p MP4",
-                    "480p MP4",
-                ]
-            )
-
-        else:
-
-            self.quality_combo.addItems(
-                [
-                    "MP3 320 kbps",
-                    "MP3 192 kbps",
-                    "M4A 128 kbps",
-                    "OPUS 160 kbps",
-                ]
-            )
 
 
 if __name__ == "__main__":
+    # import os
+    # os.environ["QT_SCALE_FACTOR"] = "1"  # ← force le scale factor à 1
+    
     app = QApplication(sys.argv)
 
     app.setStyle("Fusion")
@@ -250,7 +225,20 @@ if __name__ == "__main__":
         QLineEdit {
             padding: 6px;
         }
+        QGroupBox {
+            font-weight: bold;
+            margin-top: 16px;
+            padding-top: 6px;
+            border: 1px solid #aaaaaa;
+            border-radius: 4px;
+        }
 
+        QGroupBox::title {
+            subcontrol-origin: margin;
+            subcontrol-position: top left;
+            left: 10px;
+            padding: 0 4px;
+        }
         QPushButton {
             min-height: 32px;
         }
@@ -259,18 +247,12 @@ if __name__ == "__main__":
             height: 22px;
         }
 
-        QGroupBox {
-            font-weight: bold;
-            margin-top: 8px;
-        }
-
-        QGroupBox::title {
-            left: 10px;
-            padding: 0 4px;
-        }
         """)
 
     window = MainWindow()
     window.show()
+    
+    print("Taille réelle :", window.size())          # taille en pixels logiques
+    print("Scale factor :", app.devicePixelRatio())  # facteur de scaling
 
     sys.exit(app.exec())
