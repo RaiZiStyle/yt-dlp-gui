@@ -1,9 +1,9 @@
-import sys
+# Local import
+from ytdlpInterface import YoutubeDL_interface
 
+from pathlib import Path
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
-    QApplication,
     QFileDialog,
     QButtonGroup,
     QComboBox,
@@ -21,9 +21,13 @@ from PySide6.QtWidgets import (
 )
 
 
+
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, youtube_dl_binary: Path):
         super().__init__()
+        self.ytDL_interface = YoutubeDL_interface(youtube_dl_binary)
+        
+        
 
         self.setWindowTitle("yt-dlp GUI")
         self.resize(800, 650)
@@ -197,6 +201,9 @@ class MainWindow(QMainWindow):
         self.browse_button.clicked.connect(self.select_download_directory)
 
         self.audio_radio.toggled.connect(self.update_quality_list)
+        
+        # self.load_button.clicked.connect()
+        
 
     def select_download_directory(self):
         directory = QFileDialog.getExistingDirectory(
@@ -213,46 +220,3 @@ class MainWindow(QMainWindow):
 
 
 
-if __name__ == "__main__":
-    # import os
-    # os.environ["QT_SCALE_FACTOR"] = "1"  # ← force le scale factor à 1
-    
-    app = QApplication(sys.argv)
-
-    app.setStyle("Fusion")
-
-    app.setStyleSheet("""
-        QLineEdit {
-            padding: 6px;
-        }
-        QGroupBox {
-            font-weight: bold;
-            margin-top: 16px;
-            padding-top: 6px;
-            border: 1px solid #aaaaaa;
-            border-radius: 4px;
-        }
-
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            subcontrol-position: top left;
-            left: 10px;
-            padding: 0 4px;
-        }
-        QPushButton {
-            min-height: 32px;
-        }
-
-        QProgressBar {
-            height: 22px;
-        }
-
-        """)
-
-    window = MainWindow()
-    window.show()
-    
-    print("Taille réelle :", window.size())          # taille en pixels logiques
-    print("Scale factor :", app.devicePixelRatio())  # facteur de scaling
-
-    sys.exit(app.exec())

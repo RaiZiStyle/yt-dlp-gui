@@ -5,7 +5,10 @@
 
 # TODO : 
 1. Get format list
-2. 
+2. Make an .exe installer via pyinstaller
+3. Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
+
+X. Logging system ? 
 
 # Issues : 
 - setFixedSize & setMinimumSize not working.
