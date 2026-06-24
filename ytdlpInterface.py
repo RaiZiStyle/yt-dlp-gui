@@ -25,8 +25,7 @@ class YoutubeDL_interface:
     def print_formats(self, formats: list[dict]):
         # Calcule la largeur max par colonne (contenu vs header)
         col_widths = {
-            field: max(len(field), max(len(str(fmt.get(field, 'N/A'))) for fmt in formats))
-            for field in self.FORMAT_FIELDS
+            field: max(len(field), max(len(str(fmt.get(field, "N/A"))) for fmt in formats)) for field in self.FORMAT_FIELDS
         }
         idx_width = max(len(str(len(formats))), 2)
 
@@ -37,7 +36,9 @@ class YoutubeDL_interface:
 
         # Rows
         for i, fmt in enumerate(formats):
-            row = f"{i:<{idx_width}}  " + "  ".join(f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
+            row = f"{i:<{idx_width}}  " + "  ".join(
+                f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}" for field in self.FORMAT_FIELDS
+            )
             print(row)
 
     def query(self, url: str, query_type: str = "video"):
@@ -55,8 +56,9 @@ class YoutubeDL_interface:
         assert results is not None
 
         formated_result = self.get_format(results)
-        if query_type != "":
-            self.extract(formated_result, query_type)
+        return self.extract(formated_result, query_type)
+        
+        
 
     def get_format(self, result: CompletedProcess) -> list[dict]:
         info = json.loads(result.stdout)
@@ -73,11 +75,9 @@ class YoutubeDL_interface:
             if filesize is None:
                 filesize = 0
             tmpfloat = float(filesize / (1024 * 1024))
-            fmt["filesize"] = f"{tmpfloat:.4f} MB"   # Convert bytes to MB
+            fmt["filesize"] = f"{tmpfloat:.4f} MB"  # Convert bytes to MB
 
-            format_output = {
-                field: fmt.get(field, "N/A") for field in self.FORMAT_FIELDS
-            }
+            format_output = {field: fmt.get(field, "N/A") for field in self.FORMAT_FIELDS}
 
             arrayFormat.append(format_output)
             # print(
@@ -98,6 +98,7 @@ class YoutubeDL_interface:
                 exit()
         print(f"{'#'*60}")
         self.print_formats(results)
+        return results
 
 
 YOUTUBE_DL_BINARY = Path("yt-dlp_linux")

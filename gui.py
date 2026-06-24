@@ -21,13 +21,10 @@ from PySide6.QtWidgets import (
 )
 
 
-
 class MainWindow(QMainWindow):
     def __init__(self, youtube_dl_binary: Path):
         super().__init__()
         self.ytDL_interface = YoutubeDL_interface(youtube_dl_binary)
-        
-        
 
         self.setWindowTitle("yt-dlp GUI")
         self.resize(800, 650)
@@ -41,7 +38,6 @@ class MainWindow(QMainWindow):
         main_layout.setSpacing(10)
         main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  # ← ajoute ça
 
-
         # ==================================================
         # URL
         # ==================================================
@@ -50,7 +46,8 @@ class MainWindow(QMainWindow):
         url_layout = QHBoxLayout()
 
         self.url_edit = QLineEdit()
-        self.url_edit.setPlaceholderText("https://www.youtube.com/watch?v=...")
+        # self.url_edit.setPlaceholderText("https://www.youtube.com/watch?v=...")
+        self.url_edit.setText("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
         self.load_button = QPushButton("Charger")
 
@@ -201,9 +198,37 @@ class MainWindow(QMainWindow):
         self.browse_button.clicked.connect(self.select_download_directory)
 
         self.audio_radio.toggled.connect(self.update_quality_list)
-        
+        self.load_button.clicked.connect(self.on_load)
+
         # self.load_button.clicked.connect()
-        
+
+    def on_load(self):
+        url = self.url_edit.text().strip()
+        if not url:
+            return
+
+        query_type = "audio" if self.audio_radio.isChecked() else "video"
+
+        # Récupère les formats filtrés
+        self.formats = self.ytDL_interface.query(url, query_type)
+
+        # Peuple la combo
+        self.update_quality_list()
+
+    def update_quality_list(self):
+        self.quality_combo.clear()
+
+        if not hasattr(self, "formats") or not self.formats:
+            return
+
+        for i, fmt in enumerate(self.formats):
+            resolution = fmt.get("resolution", "N/A")
+            ext = fmt.get("ext", "N/A")
+            filesize = fmt.get("filesize", "N/A")
+            label = f"{resolution} — {ext} ({filesize})"
+            self.quality_combo.addItem(label, userData=i)  # userData = index dans self.formats
+
+        # → lance le téléchargement avec fmt, url, destination
 
     def select_download_directory(self):
         directory = QFileDialog.getExistingDirectory(
@@ -213,10 +238,8 @@ class MainWindow(QMainWindow):
 
         if directory:
             self.destination_edit.setText(directory)
-
-    def update_quality_list(self):
-
-        self.quality_combo.clear()
-
-
-
+            
+    def on_download(self):
+        idx = self.quality_combo.currentData()  # récupère l'index du format choisi
+        fmt = self.formats[idx]
+        # → utilise fmt["format_id"] pour passer à yt-dlp avec -f
