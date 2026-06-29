@@ -72,9 +72,9 @@ class MainWindow(QMainWindow):
 
         info_text_layout = QVBoxLayout()
 
-        self.title_label = QLabel("Titre de la vidéo")
-        self.channel_label = QLabel("Chaîne Youtube")
-        self.duration_label = QLabel("Durée : --:--")
+        self.title_label = QLabel("Titre de la vidéo : ")
+        self.channel_label = QLabel("Chaîne Youtube : ")
+        self.duration_label = QLabel("Durée : ")
 
         self.title_label.setWordWrap(True)
 
@@ -210,7 +210,12 @@ class MainWindow(QMainWindow):
         query_type = "audio" if self.audio_radio.isChecked() else "video"
 
         # Récupère les formats filtrés
-        self.formats = self.ytDL_interface.query(url, query_type)
+        self.videoMetadata, self.formats = self.ytDL_interface.query(url, query_type)
+        
+        
+        self.title_label.setText(self.title_label.text() + self.videoMetadata.get("title", "N/A"))
+        self.channel_label.setText(self.channel_label.text() + self.videoMetadata.get("channel", "N/A"))
+        self.duration_label.setText(self.duration_label.text() + self.videoMetadata.get("duration", 0))
 
         # Peuple la combo
         self.update_quality_list()

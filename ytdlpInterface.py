@@ -18,6 +18,12 @@ class YoutubeDL_interface:
         "vcodec": "N/A",
     }
 
+    VIDEO_FIELD = {
+        "title": "",
+        "channel": "",
+        "duration": 0,
+    }
+
     def __init__(self, youtube_dl_binary: Path) -> None:
         assert youtube_dl_binary.exists() is True
         self.youtube_dl_binary: Path = youtube_dl_binary
@@ -41,7 +47,9 @@ class YoutubeDL_interface:
             )
             print(row)
 
-    def query(self, url: str, query_type: str = "video"):
+    def query(self, url: str, query_type: str = "video"):# -> tuple[dict[Any, Any], list[Any]]:# -> tuple[dict[Any, Any], list[Any]]:
+        
+        
         results: CompletedProcess | None = None
         try:
             results = run(
@@ -55,11 +63,22 @@ class YoutubeDL_interface:
 
         assert results is not None
 
-        formated_result = self.get_format(results)
-        return self.extract(formated_result, query_type)
-        
-        
+        formated_format = self.get_format(results)
+        formated_videoMetadata =  self.get_video_data(results)
+        formated_format = self.extract(formated_format, query_type)
+        return formated_videoMetadata, formated_format
 
+    def get_video_data(self, result: CompletedProcess) -> dict:
+        json_info = json.loads(result.stdout)
+        formated_data_video = self.VIDEO_FIELD
+        minutes, seconds = divmod(json_info.get("duration", 0), 60)
+                
+        formated_data_video["title"] = json_info.get("title", "N/A")
+        formated_data_video["duration"] = f"{minutes:02}:{seconds:02}"
+        formated_data_video["channel"] = json_info.get("channel", "N/A")
+        
+        return formated_data_video
+    
     def get_format(self, result: CompletedProcess) -> list[dict]:
         info = json.loads(result.stdout)
 
@@ -107,4 +126,4 @@ assert YOUTUBE_DL_BINARY.exists() is True
 
 if __name__ == "__main__":
     yt_dl = YoutubeDL_interface(YOUTUBE_DL_BINARY)
-    yt_dl.query("https://www.youtube.com/watch?v=CRw9OIbAsOM")
+    yt_dl.query("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
