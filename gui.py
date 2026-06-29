@@ -23,6 +23,10 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QPixmap
 import requests
 
+URL_THAT_FAILED = "https://www.youtube.com/watch?v=xpFL0hvqZLw&list=PL_cpYW68sLfhG6YXPalPJw-lSaKsdE10-&index=56"
+
+DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+DEFAULT_URL = URL_THAT_FAILED
 
 class MainWindow(QMainWindow):
     def __init__(self, youtube_dl_binary: Path):
@@ -52,7 +56,7 @@ class MainWindow(QMainWindow):
 
         self.url_edit = QLineEdit()
         # self.url_edit.setPlaceholderText("https://www.youtube.com/watch?v=...")
-        self.url_edit.setText("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        self.url_edit.setText(DEFAULT_URL)
 
         self.load_button = QPushButton("Charger")
 
@@ -129,14 +133,14 @@ class MainWindow(QMainWindow):
 
         destination_label = QLabel("Dossier")
 
-        destination_layout = QHBoxLayout()
+        self.destination_layout = QHBoxLayout()
 
         self.destination_edit = QLineEdit()
 
         self.browse_button = QPushButton("Parcourir")
 
-        destination_layout.addWidget(self.destination_edit)
-        destination_layout.addWidget(self.browse_button)
+        self.destination_layout.addWidget(self.destination_edit)
+        self.destination_layout.addWidget(self.browse_button)
 
         options_layout.addWidget(type_label)
         options_layout.addWidget(self.video_radio)
@@ -150,7 +154,7 @@ class MainWindow(QMainWindow):
         options_layout.addSpacing(10)
 
         options_layout.addWidget(destination_label)
-        options_layout.addLayout(destination_layout)
+        options_layout.addLayout(self.destination_layout)
 
         options_group.setLayout(options_layout)
 
@@ -201,13 +205,49 @@ class MainWindow(QMainWindow):
         # ==================================================
 
         self.browse_button.clicked.connect(self.select_download_directory)
-
         self.audio_radio.toggled.connect(self.update_quality_list)
         self.load_button.clicked.connect(self.on_load)
+        self.download_button.clicked.connect(self.on_download)
 
-        # self.load_button.clicked.connect()
+
+    def on_download(self):
+        """
+        Launch the download thread for `YoutubeDL_interface`. 
+        """
+        format_id = self.quality_combo.currentData()
+        self.ytDL_interface.url
+        output_folder = self.destination_edit.text()
+        pathOutput_folder = Path(output_folder)
+        if pathOutput_folder.is_dir() is False:
+            exit()
+        
+        # Launch the thread
+        self.downloadThread = QThread()
+
+        self.worker = Worker(
+            self.ytDL_interface.download,
+            self.ytDL_interface.url,
+            format_id,
+            pathOutput_folder,
+        )
+
+        self.worker.moveToThread(self.downloadThread)
+
+
+        self.downloadThread.started.connect(self.worker.run)
+        # self.worker.result.connect(self.on_download_finished)
+        # self.worker.error.connect(self.on_download_error)
+
+        self.worker.finished.connect(self.downloadThread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.downloadThread.finished.connect(self.downloadThread.deleteLater)
+
+        self.downloadThread.start()
 
     def on_load(self):
+        """
+        Launch the query thread for `YoutubeDL_interface`. 
+        """
         url = self.url_edit.text().strip()
         if not url:
             return
@@ -215,7 +255,7 @@ class MainWindow(QMainWindow):
         query_type = "audio" if self.audio_radio.isChecked() else "video"
 
         # Launch the thread
-        self.queryThread = QThread()
+        self.downloadThread = QThread()
 
         self.worker = Worker(
             self.ytDL_interface.query,
@@ -223,18 +263,18 @@ class MainWindow(QMainWindow):
             query_type,
         )
 
-        self.worker.moveToThread(self.queryThread)
+        self.worker.moveToThread(self.downloadThread)
 
-        self.queryThread.started.connect(self.worker.run)
+        self.downloadThread.started.connect(self.worker.run)
 
         self.worker.result.connect(self.on_query_finished)
         self.worker.error.connect(self.on_query_error)
 
-        self.worker.finished.connect(self.queryThread.quit)
+        self.worker.finished.connect(self.downloadThread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        self.queryThread.finished.connect(self.queryThread.deleteLater)
+        self.downloadThread.finished.connect(self.downloadThread.deleteLater)
 
-        self.queryThread.start()
+        self.downloadThread.start()
 
     def on_query_finished(self, result):
         """
@@ -295,7 +335,7 @@ class MainWindow(QMainWindow):
             filesize = fmt.get("filesize", "N/A")
             label = f"{resolution} — {ext} ({filesize})"
             self.quality_combo.addItem(
-                label, userData=i
+                label, userData=fmt["format_id"]
             )  # userData = index dans self.formats
 
 
