@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PySide6.QtGui import QPixmap
+import requests
 
 
 class MainWindow(QMainWindow):
@@ -216,7 +218,19 @@ class MainWindow(QMainWindow):
         self.title_label.setText(self.title_label.text() + self.videoMetadata.get("title", "N/A"))
         self.channel_label.setText(self.channel_label.text() + self.videoMetadata.get("channel", "N/A"))
         self.duration_label.setText(self.duration_label.text() + self.videoMetadata.get("duration", 0))
-
+        
+        # Update maniature
+        thumbnail_url = self.videoMetadata.get("thumbnail", "")
+        if thumbnail_url:
+            response = requests.get(thumbnail_url)
+            pixmap = QPixmap()
+            pixmap.loadFromData(response.content)
+            
+            # Redimensionner pour tenir dans le label sans déformer
+            pixmap = pixmap.scaled(200, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            
+            self.thumbnail_label.setText("")  # Supprimer le texte "Miniature"
+            self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
 

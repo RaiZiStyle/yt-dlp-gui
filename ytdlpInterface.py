@@ -22,6 +22,7 @@ class YoutubeDL_interface:
         "title": "",
         "channel": "",
         "duration": 0,
+        "thumbnail" : ""
     }
 
     def __init__(self, youtube_dl_binary: Path) -> None:
@@ -71,11 +72,13 @@ class YoutubeDL_interface:
     def get_video_data(self, result: CompletedProcess) -> dict:
         json_info = json.loads(result.stdout)
         formated_data_video = self.VIDEO_FIELD
+        
         minutes, seconds = divmod(json_info.get("duration", 0), 60)
                 
         formated_data_video["title"] = json_info.get("title", "N/A")
         formated_data_video["duration"] = f"{minutes:02}:{seconds:02}"
         formated_data_video["channel"] = json_info.get("channel", "N/A")
+        formated_data_video["thumbnail"] = json_info.get("thumbnail", "N/A")
         
         return formated_data_video
     
