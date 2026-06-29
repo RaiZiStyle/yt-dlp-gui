@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Local import
 from gui import MainWindow
-from PySide6.QtWidgets import   QApplication
+from PySide6.QtWidgets import QApplication
 
 import json
 import subprocess
@@ -43,12 +43,11 @@ if __name__ == "__main__":
         }
 
         """)
-    
 
     window = MainWindow(YOUTUBE_DL_BINARY)
     window.show()
-    
-    print("Taille réelle :", window.size())          # taille en pixels logiques
+
+    print("Taille réelle :", window.size())  # taille en pixels logiques
     print("Scale factor :", app.devicePixelRatio())  # facteur de scaling
 
     sys.exit(app.exec())

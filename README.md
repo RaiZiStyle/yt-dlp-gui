@@ -4,12 +4,12 @@
 
 
 # TODO : 
-1. Get format list
-2. Make an .exe installer via pyinstaller
-3. Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
-X. Make the query in a thread. 
+[x]. Get format list
+[x]. Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
+[x]. Make the query in a thread.
+[ ]. Make an .exe installer via pyinstaller
+[ ]. Logging system ? 
 
-X. Logging system ? 
 
 # Issues : 
 - setFixedSize & setMinimumSize not working.

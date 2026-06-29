@@ -1,8 +1,9 @@
 # Local import
 from ytdlpInterface import YoutubeDL_interface
+from worker import Worker
 
 from pathlib import Path
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QThread
 from PySide6.QtWidgets import (
     QFileDialog,
     QButtonGroup,
@@ -38,7 +39,9 @@ class MainWindow(QMainWindow):
 
         main_layout = QVBoxLayout(central)
         main_layout.setSpacing(10)
-        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  # ← ajoute ça
+        main_layout.setSizeConstraint(
+            QVBoxLayout.SizeConstraint.SetMinimumSize
+        )  # ← ajoute ça
 
         # ==================================================
         # URL
@@ -211,30 +214,76 @@ class MainWindow(QMainWindow):
 
         query_type = "audio" if self.audio_radio.isChecked() else "video"
 
-        # Récupère les formats filtrés
-        self.videoMetadata, self.formats = self.ytDL_interface.query(url, query_type)
-        
-        
-        self.title_label.setText(self.title_label.text() + self.videoMetadata.get("title", "N/A"))
-        self.channel_label.setText(self.channel_label.text() + self.videoMetadata.get("channel", "N/A"))
-        self.duration_label.setText(self.duration_label.text() + self.videoMetadata.get("duration", 0))
-        
-        # Update maniature
+        # Launch the thread
+        self.queryThread = QThread()
+
+        self.worker = Worker(
+            self.ytDL_interface.query,
+            url,
+            query_type,
+        )
+
+        self.worker.moveToThread(self.queryThread)
+
+        self.queryThread.started.connect(self.worker.run)
+
+        self.worker.result.connect(self.on_query_finished)
+        self.worker.error.connect(self.on_query_error)
+
+        self.worker.finished.connect(self.queryThread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.queryThread.finished.connect(self.queryThread.deleteLater)
+
+        self.queryThread.start()
+
+    def on_query_finished(self, result):
+        """
+        Slot for when the thread of query is finish
+        """
+        self.videoMetadata, self.formats = result
+
+        self.title_label.setText(
+            self.title_label.text() + self.videoMetadata.get("title", "N/A")
+        )
+        self.channel_label.setText(
+            self.channel_label.text()
+            + self.videoMetadata.get("channel", "N/A")
+        )
+        self.duration_label.setText(
+            self.duration_label.text() + self.videoMetadata.get("duration", 0)
+        )
+
+        # Update thumbnail
         thumbnail_url = self.videoMetadata.get("thumbnail", "")
         if thumbnail_url:
             response = requests.get(thumbnail_url)
             pixmap = QPixmap()
             pixmap.loadFromData(response.content)
-            
+
             # Redimensionner pour tenir dans le label sans déformer
-            pixmap = pixmap.scaled(200, 120, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-            
+            pixmap = pixmap.scaled(
+                200,
+                120,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+
             self.thumbnail_label.setText("")  # Supprimer le texte "Miniature"
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
-
+    
+    def on_query_error(self, e):
+        """
+        Slot for when the thread of query is finish with an error
+        """        
+        print(e)
+        exit()
+        
     def update_quality_list(self):
+        """
+        Updated the `self.quality_combo` based on `self.formats`
+        """        
         self.quality_combo.clear()
 
         if not hasattr(self, "formats") or not self.formats:
@@ -245,11 +294,15 @@ class MainWindow(QMainWindow):
             ext = fmt.get("ext", "N/A")
             filesize = fmt.get("filesize", "N/A")
             label = f"{resolution} — {ext} ({filesize})"
-            self.quality_combo.addItem(label, userData=i)  # userData = index dans self.formats
+            self.quality_combo.addItem(
+                label, userData=i
+            )  # userData = index dans self.formats
 
-        # → lance le téléchargement avec fmt, url, destination
 
     def select_download_directory(self):
+        """
+        Slot for the `self.browse_button`
+        """              
         directory = QFileDialog.getExistingDirectory(
             self,
             "Choisir un dossier",
@@ -257,8 +310,4 @@ class MainWindow(QMainWindow):
 
         if directory:
             self.destination_edit.setText(directory)
-            
-    def on_download(self):
-        idx = self.quality_combo.currentData()  # récupère l'index du format choisi
-        fmt = self.formats[idx]
-        # → utilise fmt["format_id"] pour passer à yt-dlp avec -f
+

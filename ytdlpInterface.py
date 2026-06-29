@@ -18,12 +18,7 @@ class YoutubeDL_interface:
         "vcodec": "N/A",
     }
 
-    VIDEO_FIELD = {
-        "title": "",
-        "channel": "",
-        "duration": 0,
-        "thumbnail" : ""
-    }
+    VIDEO_FIELD = {"title": "", "channel": "", "duration": 0, "thumbnail": ""}
 
     def __init__(self, youtube_dl_binary: Path) -> None:
         assert youtube_dl_binary.exists() is True
@@ -32,25 +27,33 @@ class YoutubeDL_interface:
     def print_formats(self, formats: list[dict]):
         # Calcule la largeur max par colonne (contenu vs header)
         col_widths = {
-            field: max(len(field), max(len(str(fmt.get(field, "N/A"))) for fmt in formats)) for field in self.FORMAT_FIELDS
+            field: max(
+                len(field),
+                max(len(str(fmt.get(field, "N/A"))) for fmt in formats),
+            )
+            for field in self.FORMAT_FIELDS
         }
         idx_width = max(len(str(len(formats))), 2)
 
         # Header
-        header = f"{'#':<{idx_width}}  " + "  ".join(f"{field:<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
+        header = f"{'#':<{idx_width}}  " + "  ".join(
+            f"{field:<{col_widths[field]}}" for field in self.FORMAT_FIELDS
+        )
         print(header)
         print("-" * len(header))
 
         # Rows
         for i, fmt in enumerate(formats):
             row = f"{i:<{idx_width}}  " + "  ".join(
-                f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}" for field in self.FORMAT_FIELDS
+                f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}"
+                for field in self.FORMAT_FIELDS
             )
             print(row)
 
-    def query(self, url: str, query_type: str = "video"):# -> tuple[dict[Any, Any], list[Any]]:# -> tuple[dict[Any, Any], list[Any]]:
-        
-        
+    def query(
+        self, url: str, query_type: str = "video"
+    ):  # -> tuple[dict[Any, Any], list[Any]]:# -> tuple[dict[Any, Any], list[Any]]:
+
         results: CompletedProcess | None = None
         try:
             results = run(
@@ -65,23 +68,23 @@ class YoutubeDL_interface:
         assert results is not None
 
         formated_format = self.get_format(results)
-        formated_videoMetadata =  self.get_video_data(results)
+        formated_videoMetadata = self.get_video_data(results)
         formated_format = self.extract(formated_format, query_type)
         return formated_videoMetadata, formated_format
 
     def get_video_data(self, result: CompletedProcess) -> dict:
         json_info = json.loads(result.stdout)
         formated_data_video = self.VIDEO_FIELD
-        
+
         minutes, seconds = divmod(json_info.get("duration", 0), 60)
-                
+
         formated_data_video["title"] = json_info.get("title", "N/A")
         formated_data_video["duration"] = f"{minutes:02}:{seconds:02}"
         formated_data_video["channel"] = json_info.get("channel", "N/A")
         formated_data_video["thumbnail"] = json_info.get("thumbnail", "N/A")
-        
+
         return formated_data_video
-    
+
     def get_format(self, result: CompletedProcess) -> list[dict]:
         info = json.loads(result.stdout)
 
@@ -99,7 +102,9 @@ class YoutubeDL_interface:
             tmpfloat = float(filesize / (1024 * 1024))
             fmt["filesize"] = f"{tmpfloat:.4f} MB"  # Convert bytes to MB
 
-            format_output = {field: fmt.get(field, "N/A") for field in self.FORMAT_FIELDS}
+            format_output = {
+                field: fmt.get(field, "N/A") for field in self.FORMAT_FIELDS
+            }
 
             arrayFormat.append(format_output)
             # print(
