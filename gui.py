@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
 
         self.destination_layout = QHBoxLayout()
 
-        self.destination_edit = QLineEdit()
+        self.destination_edit = QLineEdit(str(Path("").resolve()))
 
         self.browse_button = QPushButton("Parcourir")
 
@@ -222,7 +222,8 @@ class MainWindow(QMainWindow):
         self.ytDL_interface.url
         output_folder = self.destination_edit.text()
         pathOutput_folder = Path(output_folder)
-        if pathOutput_folder.is_dir() is False:
+        if pathOutput_folder.exists() is True:
+            print(f"ERROR : output exists {pathOutput_folder.resolve}")
             exit()
         
         # Launch the thread
@@ -339,7 +340,8 @@ class MainWindow(QMainWindow):
             resolution = fmt.get("resolution", "N/A")
             ext = fmt.get("ext", "N/A")
             filesize = fmt.get("filesize", "N/A")
-            label = f"{resolution} — {ext} ({filesize})"
+            fps = fmt.get("fps", "N/A")
+            label = f"{resolution} — {ext} ({filesize}) - FPS : {fps}"
             self.quality_combo.addItem(
                 label, userData=fmt["format_id"]
             )  # userData = index dans self.formats

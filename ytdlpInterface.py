@@ -111,22 +111,22 @@ class YoutubeDL_interface:
         
         if self.query_type is E_QUERY_TYPE.VIDEO:
             command = [
-                self.youtube_dl_binary,
+                str(self.youtube_dl_binary.resolve()),
                 "-f",
                 f"{format_id_selected}+bestaudio",
                 "-o",
-                output_folder,
+                str(output_folder.resolve()),
                 url
             ]
             print("Commande VIDEO :", command)
-            # run(command)
+            run(command)
         elif self.query_type is E_QUERY_TYPE.AUDIO:
             command = [
-                self.youtube_dl_binary,
+                str(self.youtube_dl_binary.resolve()),
                 "-f",
                 f"{format_id_selected}",
                 "-o",
-                output_folder,
+                str(output_folder.resolve()),
                 url
             ]
             print("Commande AUDIO :", command)
