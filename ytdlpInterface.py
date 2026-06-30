@@ -26,6 +26,8 @@ class YoutubeDL_interface:
     }
 
     VIDEO_FIELD = {"title": "", "channel": "", "duration": 0, "thumbnail": ""}
+    
+    TIMEOUT = 5
 
     def __init__(self, youtube_dl_binary: Path) -> None:
         assert youtube_dl_binary.exists() is True
@@ -75,8 +77,10 @@ class YoutubeDL_interface:
         
         results: CompletedProcess | None = None
         try:
+            command = [self.youtube_dl_binary.resolve(),"--socket-timeout", f"{YoutubeDL_interface.TIMEOUT}", "-J", url]
+            print("Query command : ", command)
             results = run(
-                [self.youtube_dl_binary.resolve(), "-J", url],
+                command,
                 capture_output=True,
                 text=True,
             )

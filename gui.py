@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
 import requests
 
@@ -252,7 +253,10 @@ class MainWindow(QMainWindow):
         Launch the query thread for `YoutubeDL_interface`. 
         """
         url = self.url_edit.text().strip()
+        url = clean_url(url)
+        self.url_edit.setText(str(url))
         if not url:
+            print("ERROR, NO URL GIVEN")
             return
 
         query_type = "audio" if self.audio_radio.isChecked() else "video"
@@ -353,3 +357,11 @@ class MainWindow(QMainWindow):
         if directory:
             self.destination_edit.setText(directory)
 
+
+
+def clean_url(url, keep_params=("v",)):
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    filtered = {k: v[0] for k, v in query.items() if k in keep_params}
+    new_query = urlencode(filtered)
+    return urlunparse(parsed._replace(query=new_query))
