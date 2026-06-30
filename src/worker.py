@@ -5,7 +5,8 @@ class Worker(QObject):
     finished = Signal()
     result = Signal(object)
     error = Signal(Exception)
-
+    progress = Signal(dict)  # relays yt-dlp's progress_hook dict to the UI thread
+    
     def __init__(self, fn, *args, **kwargs):
         super().__init__()
         self.fn = fn

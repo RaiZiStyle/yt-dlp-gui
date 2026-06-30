@@ -22,9 +22,10 @@ from PySide6.QtWidgets import (
 )
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
+from re import sub
 import requests
 
-URL_THAT_FAILED = "https://www.youtube.com/watch?v=xpFL0hvqZLw&list=PL_cpYW68sLfhG6YXPalPJw-lSaKsdE10-&index=56"
+URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
 DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 DEFAULT_URL = URL_THAT_FAILED
@@ -37,7 +38,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, youtube_dl_binary: Path):
         super().__init__()
-        self.ytDL_interface = YoutubeDL_interface(youtube_dl_binary)
+        self.ytDL_interface = YoutubeDL_interface()
 
         self.setWindowTitle("yt-dlp GUI")
         self.resize(800, 650)
@@ -172,7 +173,7 @@ class MainWindow(QMainWindow):
         progress_layout = QVBoxLayout()
 
         self.progress_bar = QProgressBar()
-        self.progress_bar.setValue(62)
+        # self.progress_bar.setValue(62)
 
         self.speed_label = QLabel("Téléchargement : TODO MB/s")
         self.eta_label = QLabel("Temps restant : TODO")
@@ -216,38 +217,95 @@ class MainWindow(QMainWindow):
         self.download_button.clicked.connect(self.on_download)
 
     def on_download(self):
+            """
+            Launch the download thread for `YoutubeDL_interface`.
+            """
+            format_id = self.quality_combo.currentData()
+            self.ytDL_interface.url
+            output_folder = self.destination_edit.text()
+            
+            if output_folder == "":
+                print(f"ERROR : output is empty")
+                exit()
+            pathOutput_folder = Path(output_folder)
+            if pathOutput_folder.is_dir() is False:
+                print(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
+                exit()
+
+            self.progress_bar.setValue(0)
+            self.speed_label.setText("Téléchargement : -- MB/s")
+            self.eta_label.setText("Temps restant : --")
+
+            # Launch the thread
+            self.downloadThread = QThread()
+
+            self.worker = Worker(
+                self.ytDL_interface.download,
+                self.ytDL_interface.url,
+                format_id,
+                pathOutput_folder,
+            )
+
+            self.worker.moveToThread(self.downloadThread)
+
+            # yt-dlp's progress_hook runs INSIDE the worker thread (it's called
+            # synchronously from .download(), which itself runs in downloadThread).
+            # We never touch widgets from there directly. Instead the hook is just
+            # self.worker.progress.emit — emitting a Qt signal is thread-safe.
+            # Because the receiver (self.on_download_progress) lives on the UI
+            # thread and the emitter lives on downloadThread, Qt automatically
+            # uses a queued connection: the slot actually runs later, on the UI
+            # thread's event loop. That's what makes it safe to touch the
+            # progress bar / labels inside on_download_progress.
+            # Jesus claude chill out.
+            self.ytDL_interface.set_progress_callback(self.worker.progress.emit)
+            self.worker.progress.connect(self.on_download_progress)
+
+            self.downloadThread.started.connect(self.worker.run)
+            self.worker.finished.connect(self.on_download_finished)
+            self.worker.error.connect(self.on_download_error)
+
+            self.worker.finished.connect(self.downloadThread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.downloadThread.finished.connect(self.downloadThread.deleteLater)
+
+            self.downloadThread.start()
+
+    def on_download_progress(self, d: dict):
+        status = d.get("status")
+
+        if status == "downloading":
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+            downloaded = d.get("downloaded_bytes", 0)
+            if total:
+                percent = int(downloaded * 100 / total)
+                self.progress_bar.setValue(percent)
+
+            speed = _strip_ansi(d.get("_speed_str", "N/A"))  # ← strip ici
+            eta   = _strip_ansi(d.get("_eta_str",   "N/A"))  # ← et ici
+            self.speed_label.setText(f"Téléchargement : {speed}")
+            self.eta_label.setText(f"Temps restant : {eta}")
+
+        elif status == "finished":
+            self.progress_bar.setValue(100)
+            self.speed_label.setText("Téléchargement : terminé")
+            self.eta_label.setText("Temps restant : --")
+
+        elif status == "error":
+            self.speed_label.setText("Téléchargement : erreur")
+
+    def on_download_finished(self):
         """
-        Launch the download thread for `YoutubeDL_interface`.
+        Slot for when the download thread is fully done.
         """
-        format_id = self.quality_combo.currentData()
-        self.ytDL_interface.url
-        output_folder = self.destination_edit.text()
-        pathOutput_folder = Path(output_folder)
-        if pathOutput_folder.exists() is True:
-            print(f"ERROR : output exists {pathOutput_folder.resolve}")
-            exit()
+        self.ytDL_interface.set_progress_callback(None)
 
-        # Launch the thread
-        self.downloadThread = QThread()
-
-        self.worker = Worker(
-            self.ytDL_interface.download,
-            self.ytDL_interface.url,
-            format_id,
-            pathOutput_folder,
-        )
-
-        self.worker.moveToThread(self.downloadThread)
-
-        self.downloadThread.started.connect(self.worker.run)
-        # self.worker.result.connect(self.on_download_finished)
-        # self.worker.error.connect(self.on_download_error)
-
-        self.worker.finished.connect(self.downloadThread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.downloadThread.finished.connect(self.downloadThread.deleteLater)
-
-        self.downloadThread.start()
+    def on_download_error(self, e):
+        """
+        Slot for when the download thread raised an exception.
+        """
+        print(f"ERROR during download : {e}")
+        self.speed_label.setText("Téléchargement : erreur")
 
     def on_load(self):
         """
@@ -367,3 +425,7 @@ def clean_url(url, keep_params=("v",)):
     filtered = {k: v[0] for k, v in query.items() if k in keep_params}
     new_query = urlencode(filtered)
     return urlunparse(parsed._replace(query=new_query))
+
+def _strip_ansi(text: str) -> str:
+    """Remove ANSI terminal escape sequences from a string."""
+    return sub(r'\x1b\[[0-9;]*m', '', text)

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 import sys
 from pathlib import Path
 
-YOUTUBE_DL_BINARY = Path("./yt-dlp_linux")
+YOUTUBE_DL_BINARY = Path("../yt-dlp_linux")
 
 if __name__ == "__main__":
 

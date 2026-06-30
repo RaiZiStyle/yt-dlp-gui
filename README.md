@@ -7,16 +7,16 @@
 - [x] Get format list
 - [x] Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
 - [x] Make the query in a thread.
+- [x] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
 - [ ] Make an .exe installer via pyinstaller
 - [ ] Logging system ? 
-- [ ] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
 
 ## TODO - Error handler
 - [x]  If i query twice, some info stack
-- [ ]  No url given
-- [ ]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
-- [ ]  No output given
-- [ ] Handle timeout/no Internet, no youtube video
+- [x]  No url given
+- [x]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
+- [x]  No output given
+- [x] Handle timeout/no Internet, no youtube video
 
 # Issues : 
 - setFixedSize & setMinimumSize not working.
