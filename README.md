@@ -12,10 +12,11 @@
 - [ ] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
 
 ## TODO - Error handler
+- [x]  If i query twice, some info stack
 - [ ]  No url given
 - [ ]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
 - [ ]  No output given
-- [ ]  If i query twice, some info stack
+- [ ] Handle timeout/no Internet, no youtube video
 
 # Issues : 
 - setFixedSize & setMinimumSize not working.

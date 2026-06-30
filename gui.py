@@ -29,6 +29,9 @@ DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 DEFAULT_URL = URL_THAT_FAILED
 
 class MainWindow(QMainWindow):
+    TITLE_PREFIX = "Titre de la vidéo : "
+    CHANNEL_PREFIX = "Chaîne Youtube : "
+    DURATION_PREFIX = "Durée : "
     def __init__(self, youtube_dl_binary: Path):
         super().__init__()
         self.ytDL_interface = YoutubeDL_interface(youtube_dl_binary)
@@ -81,9 +84,9 @@ class MainWindow(QMainWindow):
 
         info_text_layout = QVBoxLayout()
 
-        self.title_label = QLabel("Titre de la vidéo : ")
-        self.channel_label = QLabel("Chaîne Youtube : ")
-        self.duration_label = QLabel("Durée : ")
+        self.title_label = QLabel(MainWindow.TITLE_PREFIX)
+        self.channel_label = QLabel(MainWindow.CHANNEL_PREFIX)
+        self.duration_label = QLabel(MainWindow.DURATION_PREFIX)
 
         self.title_label.setWordWrap(True)
 
@@ -283,14 +286,13 @@ class MainWindow(QMainWindow):
         self.videoMetadata, self.formats = result
 
         self.title_label.setText(
-            self.title_label.text() + self.videoMetadata.get("title", "N/A")
+            MainWindow.TITLE_PREFIX + self.videoMetadata.get("title", "N/A")
         )
         self.channel_label.setText(
-            self.channel_label.text()
-            + self.videoMetadata.get("channel", "N/A")
+            MainWindow.CHANNEL_PREFIX + self.videoMetadata.get("channel", "N/A")
         )
         self.duration_label.setText(
-            self.duration_label.text() + self.videoMetadata.get("duration", 0)
+            MainWindow.DURATION_PREFIX + str(self.videoMetadata.get("duration", 0))
         )
 
         # Update thumbnail
