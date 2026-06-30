@@ -5,6 +5,7 @@ from subprocess import run, CompletedProcess
 from pathlib import Path
 from enum import Enum
 
+
 class E_QUERY_TYPE(Enum):
     UNKNOWN = 0
     VIDEO = 1
@@ -13,7 +14,7 @@ class E_QUERY_TYPE(Enum):
 
 class YoutubeDL_interface:
     FORMAT_FIELDS = {
-        "format_id" : "",
+        "format_id": "",
         "filesize": 0,
         "resolution": "N/A",
         "format": "N/A",
@@ -26,16 +27,16 @@ class YoutubeDL_interface:
     }
 
     VIDEO_FIELD = {"title": "", "channel": "", "duration": 0, "thumbnail": ""}
-    
+
     TIMEOUT = 5
 
     def __init__(self, youtube_dl_binary: Path) -> None:
         assert youtube_dl_binary.exists() is True
         self.youtube_dl_binary: Path = youtube_dl_binary
-        self.formats : list[dict] = []
+        self.formats: list[dict] = []
         self.videoMetadata = {}
         self.url = ""
-        self.query_type : E_QUERY_TYPE = E_QUERY_TYPE.UNKNOWN
+        self.query_type: E_QUERY_TYPE = E_QUERY_TYPE.UNKNOWN
         self.output = ""
 
     def print_formats(self, formats: list[dict]):
@@ -74,10 +75,16 @@ class YoutubeDL_interface:
             self.query_type = E_QUERY_TYPE.AUDIO
         else:
             self.query_type = E_QUERY_TYPE.UNKNOWN
-        
+
         results: CompletedProcess | None = None
         try:
-            command = [self.youtube_dl_binary.resolve(),"--socket-timeout", f"{YoutubeDL_interface.TIMEOUT}", "-J", url]
+            command = [
+                self.youtube_dl_binary.resolve(),
+                "--socket-timeout",
+                f"{YoutubeDL_interface.TIMEOUT}",
+                "-J",
+                url,
+            ]
             print("Query command : ", command)
             results = run(
                 command,
@@ -97,18 +104,27 @@ class YoutubeDL_interface:
         self.videoMetadata = formated_videoMetadata
         return formated_videoMetadata, formated_format
 
-    def download(self, url : str, format_id : int, output_folder : Path):
-        index = next((i for i, x in enumerate(self.formats) if x["format_id"] == format_id), None)
+    def download(self, url: str, format_id: int, output_folder: Path):
+        index = next(
+            (
+                i
+                for i, x in enumerate(self.formats)
+                if x["format_id"] == format_id
+            ),
+            None,
+        )
         format_id_selected = None
-        
+
         try:
             if index is not None:
-                format_id_selected = self.formats[index].get("format_id", -999999)
+                format_id_selected = self.formats[index].get(
+                    "format_id", -999999
+                )
             else:
                 format_id_selected = -66666
         except IndexError:
             format_id_selected = None
-        
+
         if self.query_type is E_QUERY_TYPE.VIDEO:
             command = [
                 str(self.youtube_dl_binary.resolve()),
@@ -116,7 +132,7 @@ class YoutubeDL_interface:
                 f"{format_id_selected}+bestaudio",
                 "-o",
                 str(output_folder.resolve()),
-                url
+                url,
             ]
             print("Commande VIDEO :", command)
             run(command)
@@ -127,7 +143,7 @@ class YoutubeDL_interface:
                 f"{format_id_selected}",
                 "-o",
                 str(output_folder.resolve()),
-                url
+                url,
             ]
             print("Commande AUDIO :", command)
             # run(command)
@@ -197,5 +213,5 @@ if __name__ == "__main__":
     yt_dl.query("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
     print(f"{'#' * 50}")
     from pprint import pprint
+
     pprint(yt_dl.formats)
-    

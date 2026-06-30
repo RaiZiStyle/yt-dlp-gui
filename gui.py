@@ -29,10 +29,12 @@ URL_THAT_FAILED = "https://www.youtube.com/watch?v=xpFL0hvqZLw&list=PL_cpYW68sLf
 DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 DEFAULT_URL = URL_THAT_FAILED
 
+
 class MainWindow(QMainWindow):
     TITLE_PREFIX = "Titre de la vidéo : "
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
+
     def __init__(self, youtube_dl_binary: Path):
         super().__init__()
         self.ytDL_interface = YoutubeDL_interface(youtube_dl_binary)
@@ -213,10 +215,9 @@ class MainWindow(QMainWindow):
         self.load_button.clicked.connect(self.on_load)
         self.download_button.clicked.connect(self.on_download)
 
-
     def on_download(self):
         """
-        Launch the download thread for `YoutubeDL_interface`. 
+        Launch the download thread for `YoutubeDL_interface`.
         """
         format_id = self.quality_combo.currentData()
         self.ytDL_interface.url
@@ -225,7 +226,7 @@ class MainWindow(QMainWindow):
         if pathOutput_folder.exists() is True:
             print(f"ERROR : output exists {pathOutput_folder.resolve}")
             exit()
-        
+
         # Launch the thread
         self.downloadThread = QThread()
 
@@ -237,7 +238,6 @@ class MainWindow(QMainWindow):
         )
 
         self.worker.moveToThread(self.downloadThread)
-
 
         self.downloadThread.started.connect(self.worker.run)
         # self.worker.result.connect(self.on_download_finished)
@@ -251,7 +251,7 @@ class MainWindow(QMainWindow):
 
     def on_load(self):
         """
-        Launch the query thread for `YoutubeDL_interface`. 
+        Launch the query thread for `YoutubeDL_interface`.
         """
         url = self.url_edit.text().strip()
         url = clean_url(url)
@@ -294,10 +294,12 @@ class MainWindow(QMainWindow):
             MainWindow.TITLE_PREFIX + self.videoMetadata.get("title", "N/A")
         )
         self.channel_label.setText(
-            MainWindow.CHANNEL_PREFIX + self.videoMetadata.get("channel", "N/A")
+            MainWindow.CHANNEL_PREFIX
+            + self.videoMetadata.get("channel", "N/A")
         )
         self.duration_label.setText(
-            MainWindow.DURATION_PREFIX + str(self.videoMetadata.get("duration", 0))
+            MainWindow.DURATION_PREFIX
+            + str(self.videoMetadata.get("duration", 0))
         )
 
         # Update thumbnail
@@ -319,18 +321,18 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
-    
+
     def on_query_error(self, e):
         """
         Slot for when the thread of query is finish with an error
-        """        
+        """
         print(e)
         exit()
-        
+
     def update_quality_list(self):
         """
         Updated the `self.quality_combo` based on `self.formats`
-        """        
+        """
         self.quality_combo.clear()
 
         if not hasattr(self, "formats") or not self.formats:
@@ -346,11 +348,10 @@ class MainWindow(QMainWindow):
                 label, userData=fmt["format_id"]
             )  # userData = index dans self.formats
 
-
     def select_download_directory(self):
         """
         Slot for the `self.browse_button`
-        """              
+        """
         directory = QFileDialog.getExistingDirectory(
             self,
             "Choisir un dossier",
@@ -358,7 +359,6 @@ class MainWindow(QMainWindow):
 
         if directory:
             self.destination_edit.setText(directory)
-
 
 
 def clean_url(url, keep_params=("v",)):

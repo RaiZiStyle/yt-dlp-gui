@@ -3,8 +3,6 @@
 from gui import MainWindow
 from PySide6.QtWidgets import QApplication
 
-import json
-import subprocess
 import sys
 from pathlib import Path
 
