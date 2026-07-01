@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'          # déclenche uniquement sur un tag : git tag v1.0.0 && git push origin v1.0.0
 
+
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
