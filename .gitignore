@@ -1,2 +1,4 @@
 .VENV/*
 **/__pycache__/
+dist/*
+build/*

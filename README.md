@@ -9,6 +9,7 @@
 - [x] Make the query in a thread.
 - [x] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
 - [ ] Make an .exe installer via pyinstaller
+- [ ] Think how to handle FFMPEG
 - [ ] Logging system ? 
 
 ## TODO - Error handler
