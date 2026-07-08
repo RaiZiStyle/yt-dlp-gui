@@ -8,7 +8,7 @@
             "name": "Python: Qt App",
             "type": "debugpy",
             "request": "launch",
-            "program": "main.py",
+            "program": "src/main.py",
             "env": {
                 "DISPLAY": "localhost:10.0"
             }

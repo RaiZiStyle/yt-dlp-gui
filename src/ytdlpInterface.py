@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+# LOCAL IMPORTS
+from main import get_logger
 
 from pathlib import Path
 from enum import Enum
 from typing import Callable, Optional
 import yt_dlp
 
-from main import get_logger
 
 
 class E_QUERY_TYPE(Enum):
@@ -94,8 +95,11 @@ class YoutubeDL_interface:
             self.logger.info("Query succeeded")
         except yt_dlp.utils.DownloadError as e:
            self.logger.error(f"DownloadError : {e}")
+           raise e
+
         except Exception as e:
            self.logger.error(f"Other Error : {e}")
+           raise e
 
         assert info is not None
 

@@ -1,4 +1,4 @@
-# Local import
+# LOCAL IMPORTS
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
 from main import get_logger
@@ -25,6 +25,7 @@ from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
 from re import sub
 import requests
+import yt_dlp
 
 URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
@@ -44,11 +45,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.logger = get_logger(__name__)
         self.ytDL_interface = YoutubeDL_interface()
+        self.statusBar()  # active la barre
 
         self.setWindowTitle("yt-dlp GUI")
         self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
-
         self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
+
 
         central = QWidget()
         # central.setMinimumSize(780, 620)  # ← sur le widget central
@@ -181,8 +183,8 @@ class MainWindow(QMainWindow):
         self.progress_bar = QProgressBar()
         # self.progress_bar.setValue(62)
 
-        self.speed_label = QLabel("Téléchargement : TODO MB/s")
-        self.eta_label = QLabel("Temps restant : TODO")
+        self.speed_label = QLabel("Téléchargement : MB/s")
+        self.eta_label = QLabel("Temps restant : s")
 
         progress_layout.addWidget(self.progress_bar)
         progress_layout.addWidget(self.speed_label)
@@ -224,6 +226,22 @@ class MainWindow(QMainWindow):
         
         print(f"Size : {self.size}")
     
+    def resetInfo(self):
+        self.title_label.setText(MainWindow.TITLE_PREFIX)
+        self.channel_label.setText(MainWindow.CHANNEL_PREFIX)
+        self.duration_label.setText(MainWindow.DURATION_PREFIX)
+        self.formats = []
+        self.update_quality_list()
+        self.progress_bar.setValue(0)
+        # pixmap = pixmap.scaled(
+        #         200,
+        #         120,
+        #         Qt.AspectRatioMode.KeepAspectRatio,
+        #         Qt.TransformationMode.SmoothTransformation,
+        #     )
+
+        self.thumbnail_label.setText("Miniature")  # Supprimer le texte "Miniature"
+        # self.thumbnail_label.setPixmap(pixmap)
     # def resizeEvent(self, event):
     #     new_size = event.size()
     #     print(f"Nouvelle taille : {new_size.width()} x {new_size.height()}")
@@ -286,6 +304,7 @@ class MainWindow(QMainWindow):
             self.downloadThread.start()
 
     def on_download_progress(self, d: dict):
+        self.statusBar().showMessage(f"Téléchargement en cours", 5000)
         status = d.get("status")
 
         if status == "downloading":
@@ -312,19 +331,25 @@ class MainWindow(QMainWindow):
         """
         Slot for when the download thread is fully done.
         """
+        self.statusBar().showMessage("Téléchargement terminé.", 5000)
         self.ytDL_interface.set_progress_callback(None)
 
     def on_download_error(self, e):
         """
         Slot for when the download thread raised an exception.
         """
-        self.logger.error(f"ERROR during download : {e}")
+        assert e.msg is not None
+        errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
+        self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
+        self.resetInfo()
+        
         self.speed_label.setText("Téléchargement : erreur")
 
     def on_load(self):
         """
         Launch the query thread for `YoutubeDL_interface`.
         """
+        self.statusBar().showMessage("Chargement des informations de la vidéo...", 10000)
         url = self.url_edit.text().strip()
         url = clean_url(url)
         self.url_edit.setText(str(url))
@@ -360,6 +385,7 @@ class MainWindow(QMainWindow):
         """
         Slot for when the thread of query is finish
         """
+        self.statusBar().showMessage("Informations de la vidéo chargées.", 5000)
         self.videoMetadata, self.formats = result
 
         self.title_label.setText(
@@ -394,12 +420,17 @@ class MainWindow(QMainWindow):
         # Peuple la combo
         self.update_quality_list()
 
-    def on_query_error(self, e):
+    def on_query_error(self, e : yt_dlp.utils.DownloadError ):
         """
-        Slot for when the thread of query is finish with an error
+        Slot for when the thread of query is finish with an error| Exception
         """
+        assert e.msg is not None
+        errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
+        self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
+        self.resetInfo()
+        
         self.logger.error(e)
-        exit()
+        
 
     def update_quality_list(self):
         """
