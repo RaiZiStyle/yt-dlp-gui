@@ -2,6 +2,8 @@
 
 - https://github.com/yt-dlp/yt-dlp
 
+Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
+
 
 # TODO : 
 - [x] Better info in size (limit to 2 decimals, and handle MB, GB)
