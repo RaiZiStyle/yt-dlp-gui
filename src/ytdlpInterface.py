@@ -3,8 +3,9 @@
 from pathlib import Path
 from enum import Enum
 from typing import Callable, Optional
-
 import yt_dlp
+
+from main import get_logger
 
 
 class E_QUERY_TYPE(Enum):
@@ -42,6 +43,8 @@ class YoutubeDL_interface:
         # optional callback wired up from the Qt side (e.g. for a QProgressBar)
         # expected signature: progress_callback(d: dict) -> None
         self.progress_callback: Optional[Callable[[dict], None]] = None
+        
+        self.logger = get_logger(__name__)
 
     def _base_opts(self) -> dict:
         """Options shared by every YoutubeDL instance."""
@@ -64,14 +67,14 @@ class YoutubeDL_interface:
         idx_width = max(len(str(len(formats))), 2)
 
         # Header
-        header = f"{'#':<{idx_width}}  " + "  ".join(f"{field:<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
-        print(header)
-        print("-" * len(header))
+        # header = f"{'#':<{idx_width}}  " + "  ".join(f"{field:<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
+        # self.logger.info(header)
+        # self.logger.info("-" * len(header))
 
         # Rows
         for i, fmt in enumerate(formats):
             row = f"{i:<{idx_width}}  " + "  ".join(f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
-            print(row)
+            self.logger.info(row)
 
     def query(self, url: str, query_type: str = "video"):
         self.url = url
@@ -86,13 +89,13 @@ class YoutubeDL_interface:
         try:
             ydl_opts = self._base_opts()
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                print("Query url : ", url)
+                self.logger.info(f"Query url : {url}")
                 info = ydl.extract_info(url, download=False)
-            print("Query succeeded")
+            self.logger.info("Query succeeded")
         except yt_dlp.utils.DownloadError as e:
-            print(f"Error : {e}")
+           self.logger.error(f"DownloadError : {e}")
         except Exception as e:
-            print(f"Error : {e}")
+           self.logger.error(f"Other Error : {e}")
 
         assert info is not None
 
@@ -114,11 +117,11 @@ class YoutubeDL_interface:
             if d.get("status") == "downloading":
                 pct = d.get("_percent_str", "N/A")
                 speed = d.get("_speed_str", "N/A")
-                print(f"\rDownloading: {pct} at {speed}", end="", flush=True)
+                self.logger.info(f"\rDownloading: {pct} at {speed}")
             elif d.get("status") == "finished":
-                print(f"\nDone: {d.get('filename')}")
+                self.logger.info(f"\nDone: {d.get('filename')}")
             elif d.get("status") == "error":
-                print("\nError during download")
+                self.logger.error("\nError during download")
 
     def set_progress_callback(self, callback: Optional[Callable[[dict], None]]):
         """Call this from the Qt side to wire up a QProgressBar / Qt signal.
@@ -151,7 +154,7 @@ class YoutubeDL_interface:
             format_id_selected = None
 
         if format_id_selected is None:
-            print("Error : format not found")
+            self.logger.warning("Warning : format not found")
             return
 
         ydl_opts = self._base_opts()
@@ -159,23 +162,23 @@ class YoutubeDL_interface:
         ydl_opts["progress_hooks"] = [self._internal_progress_hook]
         # outtmpl expects a filename template, not just a folder
         ydl_opts["outtmpl"] = str(output_folder.resolve() / "%(title)s.%(ext)s")
-        print(f"outtmpl : {ydl_opts['outtmpl']}")
+        self.logger.info(f"outtmpl : {ydl_opts['outtmpl']}")
 
         if self.query_type is E_QUERY_TYPE.VIDEO:
             ydl_opts["format"] = f"{format_id_selected}+bestaudio"
-            print(f"VIDEO download, format : {ydl_opts['format']}")
+            self.logger.info(f"VIDEO download, format : {ydl_opts['format']}")
         elif self.query_type is E_QUERY_TYPE.AUDIO:
             ydl_opts["format"] = f"{format_id_selected}"
-            print(f"AUDIO download, format : {ydl_opts['format']}")
+            self.logger.info(f"AUDIO download, format : {ydl_opts['format']}")
         else:
-            print("Error : unknown query type")
+            self.logger.error("Error : unknown query type")
             return
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
         except yt_dlp.utils.DownloadError as e:
-            print(f"Error during download : {e}")
+            self.logger.error(f"Error during download : {e}")
 
     def get_video_data(self, info: dict) -> dict:
         formated_data_video = dict(self.VIDEO_FIELD)
@@ -214,9 +217,9 @@ class YoutubeDL_interface:
             case "video":
                 results = [r for r in results if r["acodec"] == "none"]
             case _:
-                print("ERROR")
+                self.logger.error("ERROR")
                 exit()
-        print(f"{'#'*60}")
+        self.logger.info(f"{'#'*60}")
         self.print_formats(results)
         return results
 
@@ -224,7 +227,7 @@ class YoutubeDL_interface:
 if __name__ == "__main__":
     yt_dl = YoutubeDL_interface()
     yt_dl.query("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    print(f"{'#' * 50}")
+    
     from pprint import pprint
 
     pprint(yt_dl.formats)

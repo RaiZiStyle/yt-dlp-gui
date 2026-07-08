@@ -1,6 +1,7 @@
 # Local import
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
+from main import get_logger
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QThread
@@ -36,8 +37,9 @@ class MainWindow(QMainWindow):
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
 
-    def __init__(self, youtube_dl_binary: Path):
+    def __init__(self):
         super().__init__()
+        self.logger = get_logger(__name__)
         self.ytDL_interface = YoutubeDL_interface()
 
         self.setWindowTitle("yt-dlp GUI")
@@ -225,11 +227,11 @@ class MainWindow(QMainWindow):
             output_folder = self.destination_edit.text()
             
             if output_folder == "":
-                print(f"ERROR : output is empty")
+                self.logger.error(f"ERROR : output is empty")
                 exit()
             pathOutput_folder = Path(output_folder)
             if pathOutput_folder.is_dir() is False:
-                print(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
+                self.logger.error(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
                 exit()
 
             self.progress_bar.setValue(0)
@@ -304,7 +306,7 @@ class MainWindow(QMainWindow):
         """
         Slot for when the download thread raised an exception.
         """
-        print(f"ERROR during download : {e}")
+        self.logger.error(f"ERROR during download : {e}")
         self.speed_label.setText("Téléchargement : erreur")
 
     def on_load(self):
@@ -315,7 +317,7 @@ class MainWindow(QMainWindow):
         url = clean_url(url)
         self.url_edit.setText(str(url))
         if not url:
-            print("ERROR, NO URL GIVEN")
+            self.logger.error("ERROR, NO URL GIVEN")
             return
 
         query_type = "audio" if self.audio_radio.isChecked() else "video"
@@ -384,7 +386,7 @@ class MainWindow(QMainWindow):
         """
         Slot for when the thread of query is finish with an error
         """
-        print(e)
+        self.logger.error(e)
         exit()
 
     def update_quality_list(self):

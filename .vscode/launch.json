@@ -12,6 +12,13 @@
             "env": {
                 "DISPLAY": "localhost:10.0"
             }
+        },
+        {
+            "name": "Python: Launch current file",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "justMyCode": true
         }
     ]
 }
