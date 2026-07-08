@@ -29,13 +29,16 @@ import requests
 URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
 DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-DEFAULT_URL = URL_THAT_FAILED
+# DEFAULT_URL = URL_THAT_FAILED
 
 
 class MainWindow(QMainWindow):
     TITLE_PREFIX = "Titre de la vidéo : "
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
+    
+    HEIGH_SIZE = 700
+    WIDTH_SIZE = 600
 
     def __init__(self):
         super().__init__()
@@ -43,11 +46,12 @@ class MainWindow(QMainWindow):
         self.ytDL_interface = YoutubeDL_interface()
 
         self.setWindowTitle("yt-dlp GUI")
-        self.resize(800, 650)
-        self.setFixedSize(800, 650)  # ← bloque toute tentative de resize
+        self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
+
+        self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
 
         central = QWidget()
-        central.setMinimumSize(780, 620)  # ← sur le widget central
+        # central.setMinimumSize(780, 620)  # ← sur le widget central
         self.setCentralWidget(central)
 
         main_layout = QVBoxLayout(central)
@@ -217,7 +221,15 @@ class MainWindow(QMainWindow):
         self.audio_radio.toggled.connect(self.update_quality_list)
         self.load_button.clicked.connect(self.on_load)
         self.download_button.clicked.connect(self.on_download)
-
+        
+        print(f"Size : {self.size}")
+    
+    # def resizeEvent(self, event):
+    #     new_size = event.size()
+    #     print(f"Nouvelle taille : {new_size.width()} x {new_size.height()}")
+        
+    #     super().resizeEvent(event)  # important 
+        
     def on_download(self):
             """
             Launch the download thread for `YoutubeDL_interface`.

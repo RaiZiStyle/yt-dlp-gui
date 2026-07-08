@@ -4,7 +4,7 @@
   #define MyAppVersion "0.0.0"
 #endif
 #define MyAppPublisher "Arthur Guyot--Premel"
-#define MyAppExeName "yt-dlp-gui.exe"
+#define MyAppExeName "yt-dlp-gui_{#MyAppVersion}.exe"
 #define MyAppSourceDir "..\dist\yt-dlp-gui"
 
 [Setup]
@@ -16,7 +16,7 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 OutputDir=..\installer_output
-OutputBaseFilename=yt-dlp-gui-setup
+OutputBaseFilename=yt-dlp-gui-setup_{#MyAppVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

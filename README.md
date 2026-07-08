@@ -11,8 +11,8 @@
 - [x] Make an .exe installer via pyinstaller
 - [x] Think how to handle FFMPEG
 - [x] Logging system ? 
-- [ ] Make it working ? lol
 - [ ] Cancel Btn when downloading   
+- [ ] Make a Icon ? 
 
 ## TODO - Error handler
 - [x]  If i query twice, some info stack

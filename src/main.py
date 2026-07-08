@@ -20,10 +20,10 @@ def get_logger(name : str | None = None) -> Logger:
         # formatter = Formatter("%(asctime)s [%(levelname)s] ")
         
         # Handler console
-        console_handler = StreamHandler()
-        console_handler.setLevel(INFO)
-        console_handler.setFormatter(formatter)
-        root_logger.addHandler(console_handler)
+        # console_handler = StreamHandler()
+        # console_handler.setLevel(INFO)
+        # console_handler.setFormatter(formatter)
+        # root_logger.addHandler(console_handler)
         
         # Handler file
         log_path = os.path.join(os.path.dirname(__file__), "yt-dlp-gui.log")
