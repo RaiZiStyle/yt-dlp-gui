@@ -226,22 +226,20 @@ class MainWindow(QMainWindow):
         
         print(f"Size : {self.size}")
     
-    def resetInfo(self):
-        self.title_label.setText(MainWindow.TITLE_PREFIX)
-        self.channel_label.setText(MainWindow.CHANNEL_PREFIX)
-        self.duration_label.setText(MainWindow.DURATION_PREFIX)
-        self.formats = []
-        self.update_quality_list()
-        self.progress_bar.setValue(0)
-        # pixmap = pixmap.scaled(
-        #         200,
-        #         120,
-        #         Qt.AspectRatioMode.KeepAspectRatio,
-        #         Qt.TransformationMode.SmoothTransformation,
-        #     )
+    def resetInfo(self,isLoading : bool, isDownloading : bool):
+        if isLoading:
+            self.title_label.setText(MainWindow.TITLE_PREFIX)
+            self.channel_label.setText(MainWindow.CHANNEL_PREFIX)
+            self.duration_label.setText(MainWindow.DURATION_PREFIX)
+            self.formats = []
+            self.update_quality_list()
+        if isDownloading:
+            self.progress_bar.setValue(0)
+            self.speed_label.setText("Téléchargement : erreur")
+            self.thumbnail_label.setText("Miniature") 
+            
+        
 
-        self.thumbnail_label.setText("Miniature")  # Supprimer le texte "Miniature"
-        # self.thumbnail_label.setPixmap(pixmap)
     # def resizeEvent(self, event):
     #     new_size = event.size()
     #     print(f"Nouvelle taille : {new_size.width()} x {new_size.height()}")
@@ -341,9 +339,9 @@ class MainWindow(QMainWindow):
         assert e.msg is not None
         errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
         self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
-        self.resetInfo()
         
-        self.speed_label.setText("Téléchargement : erreur")
+        self.resetInfo(isLoading=False, isDownloading=True)
+        
 
     def on_load(self):
         """
@@ -427,9 +425,9 @@ class MainWindow(QMainWindow):
         assert e.msg is not None
         errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
         self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
-        self.resetInfo()
+        self.resetInfo(isLoading=True, isDownloading=False)
         
-        self.logger.error(e)
+        self.logger.error(errorMsg)
         
 
     def update_quality_list(self):
