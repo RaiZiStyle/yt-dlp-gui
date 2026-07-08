@@ -8,9 +8,11 @@
 - [x] Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
 - [x] Make the query in a thread.
 - [x] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
-- [ ] Make an .exe installer via pyinstaller
-- [ ] Think how to handle FFMPEG
-- [ ] Logging system ? 
+- [x] Make an .exe installer via pyinstaller
+- [x] Think how to handle FFMPEG
+- [x] Logging system ? 
+- [ ] Make it working ? lol
+- [ ] Cancel Btn when downloading   
 
 ## TODO - Error handler
 - [x]  If i query twice, some info stack
@@ -18,6 +20,7 @@
 - [x]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
 - [x]  No output given
 - [x] Handle timeout/no Internet, no youtube video
+- [ ] Reset info when error in download
 
 # Issues : 
 - setFixedSize & setMinimumSize not working.
@@ -67,3 +70,7 @@
 └──────────────────────────────────────────────────────────────┘
 
 ```
+
+
+# How to launch CI/CD : 
+`git tag -a vx.y.z -m "message"`

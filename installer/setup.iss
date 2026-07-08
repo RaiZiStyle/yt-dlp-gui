@@ -1,7 +1,9 @@
 ; installer/setup.iss
-#define MyAppName "yt-dlp GUI"
-#define MyAppVersion "1.0.0"
-#define MyAppPublisher "Ton Nom"
+#define MyAppName "yt-dlp-GUI"
+#ifndef MyAppVersion
+  #define MyAppVersion "0.0.0"
+#endif
+#define MyAppPublisher "Arthur Guyot--Premel"
 #define MyAppExeName "yt-dlp-gui.exe"
 #define MyAppSourceDir "..\dist\yt-dlp-gui"
 
@@ -18,12 +20,11 @@ OutputBaseFilename=yt-dlp-gui-setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-; Demande les droits admin pour installer dans Program Files
-PrivilegesRequired=admin
+; Demande les lowest privilèges pour l'installation 
+PrivilegesRequired=lowest
 
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
-Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
