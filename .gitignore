@@ -1,3 +1,5 @@
 .VENV/*
 **/__pycache__/
 *.log
+dist/*
+build/*
