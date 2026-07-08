@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # LOCAL IMPORTS
-from main import get_logger
+from utils import get_logger, format_size
 
 from pathlib import Path
 from enum import Enum
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 import yt_dlp
-
 
 
 class E_QUERY_TYPE(Enum):
@@ -40,11 +39,12 @@ class YoutubeDL_interface:
         self.url: str = ""
         self.query_type: E_QUERY_TYPE = E_QUERY_TYPE.UNKNOWN
         self.output: str = ""
+        self._cancel_flag = None
 
         # optional callback wired up from the Qt side (e.g. for a QProgressBar)
         # expected signature: progress_callback(d: dict) -> None
         self.progress_callback: Optional[Callable[[dict], None]] = None
-        
+
         self.logger = get_logger(__name__)
 
     def _base_opts(self) -> dict:
@@ -56,7 +56,29 @@ class YoutubeDL_interface:
             "noplaylist": True,
         }
 
-    def print_formats(self, formats: list[dict]):
+    def _internal_progress_hook(self, d: dict) -> None:
+        """Internal hook passed to yt-dlp, relays to the Qt callback if set."""
+        # d contains, among others: status, info_dict, filename, tmpfilename,
+        # downloaded_bytes, total_bytes / total_bytes_estimate, speed, eta,
+        # _percent_str, _speed_str, _eta_str (see yt-dlp progress_hooks docs)
+        # Cancellation: raising from the hook stops yt-dlp cleanly
+        self.logger.info(f"Progress hook called with status: {d.get('status')}")
+        self.logger.info(f"State of cancel flag: {self._cancel_flag}")
+        if self._cancel_flag and self._cancel_flag():
+            raise Exception("Download cancelled by user")
+        if self.progress_callback is not None:
+            self.progress_callback(d)
+        else:
+            if d.get("status") == "downloading":
+                pct = d.get("_percent_str", "N/A")
+                speed = d.get("_speed_str", "N/A")
+                self.logger.info(f"\rDownloading: {pct} at {speed}")
+            elif d.get("status") == "finished":
+                self.logger.info(f"\nDone: {d.get('filename')}")
+            elif d.get("status") == "error":
+                self.logger.error("\nError during download")
+
+    def print_formats(self, formats: list[dict]) -> None:
         # Compute the max width per column (content vs header)
         col_widths = {
             field: max(
@@ -77,7 +99,19 @@ class YoutubeDL_interface:
             row = f"{i:<{idx_width}}  " + "  ".join(f"{str(fmt.get(field, 'N/A')):<{col_widths[field]}}" for field in self.FORMAT_FIELDS)
             self.logger.info(row)
 
-    def query(self, url: str, query_type: str = "video"):
+    def set_cancel_flag(self, flag_fn) -> None:
+        """
+        Pass a callable that returns True when cancellation is requested.
+        Called on every progress tick, inside the worker thread — no Qt widgets.
+        Example: interface.set_cancel_flag(lambda: self.worker._cancelled)
+        """
+        self.logger.info("Setting cancel flag callable")
+        self._cancel_flag = flag_fn
+
+    def query(self, url: str, query_type: str = "video") -> tuple[dict[Any, Any], list[Any]]:
+        """
+        Query the video or audio formats and metadata for the given URL and return them as a tuple (videoMetadata, formats).
+        """
         self.url = url
         if query_type == "video":
             self.query_type = E_QUERY_TYPE.VIDEO
@@ -94,12 +128,12 @@ class YoutubeDL_interface:
                 info = ydl.extract_info(url, download=False)
             self.logger.info("Query succeeded")
         except yt_dlp.utils.DownloadError as e:
-           self.logger.error(f"DownloadError : {e}")
-           raise e
+            self.logger.error(f"DownloadError : {e}")
+            raise e
 
         except Exception as e:
-           self.logger.error(f"Other Error : {e}")
-           raise e
+            self.logger.error(f"Other Error : {e}")
+            raise e
 
         assert info is not None
 
@@ -110,39 +144,10 @@ class YoutubeDL_interface:
         self.videoMetadata = formated_videoMetadata
         return formated_videoMetadata, formated_format
 
-    def _internal_progress_hook(self, d: dict):
-        """Internal hook passed to yt-dlp, relays to the Qt callback if set."""
-        # d contains, among others: status, info_dict, filename, tmpfilename,
-        # downloaded_bytes, total_bytes / total_bytes_estimate, speed, eta,
-        # _percent_str, _speed_str, _eta_str (see yt-dlp progress_hooks docs)
-        if self.progress_callback is not None:
-            self.progress_callback(d)
-        else:
-            if d.get("status") == "downloading":
-                pct = d.get("_percent_str", "N/A")
-                speed = d.get("_speed_str", "N/A")
-                self.logger.info(f"\rDownloading: {pct} at {speed}")
-            elif d.get("status") == "finished":
-                self.logger.info(f"\nDone: {d.get('filename')}")
-            elif d.get("status") == "error":
-                self.logger.error("\nError during download")
-
-    def set_progress_callback(self, callback: Optional[Callable[[dict], None]]):
-        """Call this from the Qt side to wire up a QProgressBar / Qt signal.
-
-        Example on the Qt side (with a QObject emitting a signal):
-            interface.set_progress_callback(self._on_progress)
-
-            def _on_progress(self, d: dict):
-                if d.get("status") == "downloading":
-                    total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
-                    downloaded = d.get("downloaded_bytes", 0)
-                    if total:
-                        self.progressChanged.emit(int(downloaded * 100 / total))
+    def download(self, url: str, format_id: str, output_folder: Path) -> None:
         """
-        self.progress_callback = callback
-
-    def download(self, url: str, format_id: str, output_folder: Path):
+        Download the video or audio in the specified format to the output folder.
+        """
         index = next(
             (i for i, x in enumerate(self.formats) if x["format_id"] == format_id),
             None,
@@ -184,7 +189,26 @@ class YoutubeDL_interface:
         except yt_dlp.utils.DownloadError as e:
             self.logger.error(f"Error during download : {e}")
 
+    def set_progress_callback(self, callback: Optional[Callable[[dict], None]]) -> None:
+        """Call this from the Qt side to wire up a QProgressBar / Qt signal.
+
+        Example on the Qt side (with a QObject emitting a signal):
+            interface.set_progress_callback(self._on_progress)
+
+            def _on_progress(self, d: dict):
+                if d.get("status") == "downloading":
+                    total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                    downloaded = d.get("downloaded_bytes", 0)
+                    if total:
+                        self.progressChanged.emit(int(downloaded * 100 / total))
+        """
+        self.progress_callback = callback
+
     def get_video_data(self, info: dict) -> dict:
+        """
+        Extracts and formats the video metadata from the info dict.
+        Field from : VIDEO_FIELD
+        """
         formated_data_video = dict(self.VIDEO_FIELD)
 
         minutes, seconds = divmod(info.get("duration", 0) or 0, 60)
@@ -197,6 +221,9 @@ class YoutubeDL_interface:
         return formated_data_video
 
     def get_format(self, info: dict) -> list[dict]:
+        """
+        Extracts and formats the available formats from the info dict.
+        """
         arrayFormat = []
 
         for fmt in info.get("formats", []):
@@ -204,10 +231,9 @@ class YoutubeDL_interface:
                 continue
 
             filesize = fmt.get("filesize", 0)
-            if filesize is None:
-                filesize = 0
-            tmpfloat = float(filesize / (1024 * 1024))
-            fmt["filesize"] = f"{tmpfloat:.4f} MB"  # Convert bytes to MB
+            filesizeFormated = format_size(filesize) if filesize is not None else "N/A"
+            self.logger.debug(f"filesize before: {filesize}, after : {filesizeFormated}\n\n")
+            fmt["filesize"] = f"{filesizeFormated}"
 
             format_output = {field: fmt.get(field, "N/A") for field in self.FORMAT_FIELDS}
 
@@ -215,6 +241,9 @@ class YoutubeDL_interface:
         return arrayFormat
 
     def extract(self, results, query_type: str):
+        """
+        Extract formats based on the query type (audio or video).
+        """
         match query_type:
             case "audio":
                 results = [r for r in results if r["vcodec"] == "none"]
@@ -231,7 +260,7 @@ class YoutubeDL_interface:
 if __name__ == "__main__":
     yt_dl = YoutubeDL_interface()
     yt_dl.query("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-    
+
     from pprint import pprint
 
     pprint(yt_dl.formats)

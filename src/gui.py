@@ -1,7 +1,7 @@
 # LOCAL IMPORTS
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
-from main import get_logger
+from utils import get_logger, _strip_ansi, clean_url
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QThread
@@ -30,20 +30,23 @@ import yt_dlp
 URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
 DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-# DEFAULT_URL = URL_THAT_FAILED
+DEFAULT_URL = URL_THAT_FAILED
 
 
 class MainWindow(QMainWindow):
     TITLE_PREFIX = "Titre de la vidéo : "
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
-    
+
     HEIGH_SIZE = 700
     WIDTH_SIZE = 600
 
+    DEFAULT_DELAY_STATUSBAR = 5000  # ms
+
     def __init__(self):
+        
         super().__init__()
-        self.logger = get_logger(__name__)
+        self.logger = get_logger(MainWindow.__name__)
         self.ytDL_interface = YoutubeDL_interface()
         self.statusBar()  # active la barre
 
@@ -51,21 +54,17 @@ class MainWindow(QMainWindow):
         self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
         self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
 
-
         central = QWidget()
         # central.setMinimumSize(780, 620)  # ← sur le widget central
         self.setCentralWidget(central)
 
         main_layout = QVBoxLayout(central)
         main_layout.setSpacing(10)
-        main_layout.setSizeConstraint(
-            QVBoxLayout.SizeConstraint.SetMinimumSize
-        )  # ← ajoute ça
+        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  # ← ajoute ça
 
         # ==================================================
         # URL
         # ==================================================
-
         url_group = QGroupBox("URL")
         url_layout = QHBoxLayout()
 
@@ -83,15 +82,14 @@ class MainWindow(QMainWindow):
         # ==================================================
         # Video info
         # ==================================================
-
         info_group = QGroupBox("Informations")
         info_layout = QHBoxLayout()
 
         self.thumbnail_label = QLabel()
 
         self.thumbnail_label.setFixedSize(200, 120)
-        self.thumbnail_label.setFrameShape(QFrame.Box)
-        self.thumbnail_label.setAlignment(Qt.AlignCenter)
+        self.thumbnail_label.setFrameShape(QFrame.Box)  # type: ignore
+        self.thumbnail_label.setAlignment(Qt.AlignCenter)  # type: ignore
         self.thumbnail_label.setText("Miniature")
 
         info_text_layout = QVBoxLayout()
@@ -115,14 +113,12 @@ class MainWindow(QMainWindow):
         # ==================================================
         # Download options
         # ==================================================
-
         options_group = QGroupBox("Options")
         options_layout = QVBoxLayout()
 
-        #
+        # ==================================================
         # Type
-        #
-
+        # ==================================================
         type_label = QLabel("Type")
 
         self.video_radio = QRadioButton("Vidéo")
@@ -134,24 +130,19 @@ class MainWindow(QMainWindow):
         radio_group.addButton(self.video_radio)
         radio_group.addButton(self.audio_radio)
 
-        #
+        # ==================================================
         # Quality
-        #
-
+        # ==================================================
         quality_label = QLabel("Qualité")
 
         self.quality_combo = QComboBox()
 
-        #
+        # ==================================================
         # Destination
-        #
-
+        # ==================================================
         destination_label = QLabel("Dossier")
-
         self.destination_layout = QHBoxLayout()
-
         self.destination_edit = QLineEdit(str(Path("").resolve()))
-
         self.browse_button = QPushButton("Parcourir")
 
         self.destination_layout.addWidget(self.destination_edit)
@@ -176,7 +167,6 @@ class MainWindow(QMainWindow):
         # ==================================================
         # Progress
         # ==================================================
-
         progress_group = QGroupBox("Téléchargement")
         progress_layout = QVBoxLayout()
 
@@ -195,20 +185,23 @@ class MainWindow(QMainWindow):
         # ==================================================
         # Download button
         # ==================================================
-
         button_layout = QHBoxLayout()
-
         button_layout.addStretch()
-
         self.download_button = QPushButton("Télécharger")
         self.download_button.setMinimumWidth(180)
-
         button_layout.addWidget(self.download_button)
+
+        # ==================================================
+        # Cancel button
+        # ==================================================
+        self.cancel_button = QPushButton("Annuler")
+        self.cancel_button.setEnabled(False)
+        button_layout.addWidget(self.cancel_button)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
         # ==================================================
         # Main Layout
         # ==================================================
-
         main_layout.addWidget(url_group)
         main_layout.addWidget(info_group)
         main_layout.addWidget(options_group)
@@ -223,126 +216,43 @@ class MainWindow(QMainWindow):
         self.audio_radio.toggled.connect(self.update_quality_list)
         self.load_button.clicked.connect(self.on_load)
         self.download_button.clicked.connect(self.on_download)
-        
+
         print(f"Size : {self.size}")
-    
-    def resetInfo(self,isLoading : bool, isDownloading : bool):
+
+    def update_quality_list(self):
+        """
+        Updated the `self.quality_combo` based on `self.formats`
+        """
+        self.quality_combo.clear()
+
+        if not hasattr(self, "formats") or not self.formats:
+            return
+
+        for i, fmt in enumerate(self.formats):
+            resolution = fmt.get("resolution", "N/A")
+            ext = fmt.get("ext", "N/A")
+            filesize = fmt.get("filesize", "N/A")
+            fps = fmt.get("fps", "N/A")
+            label = f"{resolution} — {ext} ({filesize}) - FPS : {fps}"
+            self.quality_combo.addItem(label, userData=fmt["format_id"])  # userData = index dans self.formats
+
+    def resetInfo(self, isLoading: bool, isDownloading: bool):
         if isLoading:
             self.title_label.setText(MainWindow.TITLE_PREFIX)
             self.channel_label.setText(MainWindow.CHANNEL_PREFIX)
             self.duration_label.setText(MainWindow.DURATION_PREFIX)
             self.formats = []
             self.update_quality_list()
+            self.thumbnail_label.setText("Miniature")
         if isDownloading:
             self.progress_bar.setValue(0)
             self.speed_label.setText("Téléchargement : erreur")
-            self.thumbnail_label.setText("Miniature") 
-            
-        
 
     # def resizeEvent(self, event):
     #     new_size = event.size()
     #     print(f"Nouvelle taille : {new_size.width()} x {new_size.height()}")
-        
-    #     super().resizeEvent(event)  # important 
-        
-    def on_download(self):
-            """
-            Launch the download thread for `YoutubeDL_interface`.
-            """
-            format_id = self.quality_combo.currentData()
-            self.ytDL_interface.url
-            output_folder = self.destination_edit.text()
-            
-            if output_folder == "":
-                self.logger.error(f"ERROR : output is empty")
-                exit()
-            pathOutput_folder = Path(output_folder)
-            if pathOutput_folder.is_dir() is False:
-                self.logger.error(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
-                exit()
 
-            self.progress_bar.setValue(0)
-            self.speed_label.setText("Téléchargement : -- MB/s")
-            self.eta_label.setText("Temps restant : --")
-
-            # Launch the thread
-            self.downloadThread = QThread()
-
-            self.worker = Worker(
-                self.ytDL_interface.download,
-                self.ytDL_interface.url,
-                format_id,
-                pathOutput_folder,
-            )
-
-            self.worker.moveToThread(self.downloadThread)
-
-            # yt-dlp's progress_hook runs INSIDE the worker thread (it's called
-            # synchronously from .download(), which itself runs in downloadThread).
-            # We never touch widgets from there directly. Instead the hook is just
-            # self.worker.progress.emit — emitting a Qt signal is thread-safe.
-            # Because the receiver (self.on_download_progress) lives on the UI
-            # thread and the emitter lives on downloadThread, Qt automatically
-            # uses a queued connection: the slot actually runs later, on the UI
-            # thread's event loop. That's what makes it safe to touch the
-            # progress bar / labels inside on_download_progress.
-            # Jesus claude chill out.
-            self.ytDL_interface.set_progress_callback(self.worker.progress.emit)
-            self.worker.progress.connect(self.on_download_progress)
-
-            self.downloadThread.started.connect(self.worker.run)
-            self.worker.finished.connect(self.on_download_finished)
-            self.worker.error.connect(self.on_download_error)
-
-            self.worker.finished.connect(self.downloadThread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.downloadThread.finished.connect(self.downloadThread.deleteLater)
-
-            self.downloadThread.start()
-
-    def on_download_progress(self, d: dict):
-        self.statusBar().showMessage(f"Téléchargement en cours", 5000)
-        status = d.get("status")
-
-        if status == "downloading":
-            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
-            downloaded = d.get("downloaded_bytes", 0)
-            if total:
-                percent = int(downloaded * 100 / total)
-                self.progress_bar.setValue(percent)
-
-            speed = _strip_ansi(d.get("_speed_str", "N/A"))  # ← strip ici
-            eta   = _strip_ansi(d.get("_eta_str",   "N/A"))  # ← et ici
-            self.speed_label.setText(f"Téléchargement : {speed}")
-            self.eta_label.setText(f"Temps restant : {eta}")
-
-        elif status == "finished":
-            self.progress_bar.setValue(100)
-            self.speed_label.setText("Téléchargement : terminé")
-            self.eta_label.setText("Temps restant : --")
-
-        elif status == "error":
-            self.speed_label.setText("Téléchargement : erreur")
-
-    def on_download_finished(self):
-        """
-        Slot for when the download thread is fully done.
-        """
-        self.statusBar().showMessage("Téléchargement terminé.", 5000)
-        self.ytDL_interface.set_progress_callback(None)
-
-    def on_download_error(self, e):
-        """
-        Slot for when the download thread raised an exception.
-        """
-        assert e.msg is not None
-        errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
-        self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
-        
-        self.resetInfo(isLoading=False, isDownloading=True)
-        
-
+    #     super().resizeEvent(event)  # important
     def on_load(self):
         """
         Launch the query thread for `YoutubeDL_interface`.
@@ -383,20 +293,12 @@ class MainWindow(QMainWindow):
         """
         Slot for when the thread of query is finish
         """
-        self.statusBar().showMessage("Informations de la vidéo chargées.", 5000)
+        self.statusBar().showMessage("Informations de la vidéo chargées.", self.DEFAULT_DELAY_STATUSBAR)
         self.videoMetadata, self.formats = result
 
-        self.title_label.setText(
-            MainWindow.TITLE_PREFIX + self.videoMetadata.get("title", "N/A")
-        )
-        self.channel_label.setText(
-            MainWindow.CHANNEL_PREFIX
-            + self.videoMetadata.get("channel", "N/A")
-        )
-        self.duration_label.setText(
-            MainWindow.DURATION_PREFIX
-            + str(self.videoMetadata.get("duration", 0))
-        )
+        self.title_label.setText(MainWindow.TITLE_PREFIX + self.videoMetadata.get("title", "N/A"))
+        self.channel_label.setText(MainWindow.CHANNEL_PREFIX + self.videoMetadata.get("channel", "N/A"))
+        self.duration_label.setText(MainWindow.DURATION_PREFIX + str(self.videoMetadata.get("duration", 0)))
 
         # Update thumbnail
         thumbnail_url = self.videoMetadata.get("thumbnail", "")
@@ -418,7 +320,7 @@ class MainWindow(QMainWindow):
         # Peuple la combo
         self.update_quality_list()
 
-    def on_query_error(self, e : yt_dlp.utils.DownloadError ):
+    def on_query_error(self, e: yt_dlp.utils.DownloadError):
         """
         Slot for when the thread of query is finish with an error| Exception
         """
@@ -426,28 +328,135 @@ class MainWindow(QMainWindow):
         errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
         self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
         self.resetInfo(isLoading=True, isDownloading=False)
-        
+
         self.logger.error(errorMsg)
-        
 
-    def update_quality_list(self):
+    def on_download(self):
         """
-        Updated the `self.quality_combo` based on `self.formats`
+        Launch the download thread for `YoutubeDL_interface`.
         """
-        self.quality_combo.clear()
+        format_id = self.quality_combo.currentData()
+        self.ytDL_interface.url
+        output_folder = self.destination_edit.text()
 
-        if not hasattr(self, "formats") or not self.formats:
-            return
+        if output_folder == "":
+            self.logger.error(f"ERROR : output is empty")
+            exit()
+        pathOutput_folder = Path(output_folder)
+        if pathOutput_folder.is_dir() is False:
+            self.logger.error(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
+            exit()
 
-        for i, fmt in enumerate(self.formats):
-            resolution = fmt.get("resolution", "N/A")
-            ext = fmt.get("ext", "N/A")
-            filesize = fmt.get("filesize", "N/A")
-            fps = fmt.get("fps", "N/A")
-            label = f"{resolution} — {ext} ({filesize}) - FPS : {fps}"
-            self.quality_combo.addItem(
-                label, userData=fmt["format_id"]
-            )  # userData = index dans self.formats
+        self.progress_bar.setValue(0)
+        self.speed_label.setText("Téléchargement : -- MB/s")
+        self.eta_label.setText("Temps restant : --")
+
+        # Launch the thread
+        self.downloadThread = QThread()
+
+        self.worker = Worker(
+            self.ytDL_interface.download,
+            self.ytDL_interface.url,
+            format_id,
+            pathOutput_folder,
+        )
+
+        self.worker.moveToThread(self.downloadThread)
+
+        self.download_button.setEnabled(False)  # ← désactive pendant le DL
+        self.cancel_button.setEnabled(True)  # ← active le bouton annuler
+
+        self.ytDL_interface.set_cancel_flag(lambda : self.worker._cancelled)
+        self.ytDL_interface.set_progress_callback(self.worker.progress.emit)
+
+        # yt-dlp's progress_hook runs INSIDE the worker thread (it's called
+        # synchronously from .download(), which itself runs in downloadThread).
+        # We never touch widgets from there directly. Instead the hook is just
+        # self.worker.progress.emit — emitting a Qt signal is thread-safe.
+        # Because the receiver (self.on_download_progress) lives on the UI
+        # thread and the emitter lives on downloadThread, Qt automatically
+        # uses a queued connection: the slot actually runs later, on the UI
+        # thread's event loop. That's what makes it safe to touch the
+        # progress bar / labels inside on_download_progress.
+        # Jesus claude chill out.
+        self.ytDL_interface.set_progress_callback(self.worker.progress.emit)
+        self.worker.progress.connect(self.on_download_progress)
+
+        self.downloadThread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.on_download_finished)
+        self.worker.error.connect(self.on_download_error)
+
+        self.worker.finished.connect(self.downloadThread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.downloadThread.finished.connect(self.downloadThread.deleteLater)
+
+        self.downloadThread.start()
+
+    def on_cancel(self):
+        """
+        1
+        """
+        if hasattr(self, "worker") and self.worker:
+            self.logger.info("Cancel download")
+            # self.ytDL_interface.set_cancel_flag(None)  # ← désactive le hook
+            self.worker.cancel()  # pose le flag → le hook lève l'exception au prochain tick
+            self.cancel_button.setEnabled(False)
+            self.resetInfo(isLoading=False, isDownloading=True)
+            self.statusBar().showMessage("Annulation du téléchargement...", self.DEFAULT_DELAY_STATUSBAR)
+
+    def on_download_progress(self, d: dict):
+        status = d.get("status")
+
+        if status == "downloading":
+            self.statusBar().showMessage(f"Téléchargement en cours", self.DEFAULT_DELAY_STATUSBAR)
+            total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+            downloaded = d.get("downloaded_bytes", 0)
+            if total:
+                percent = int(downloaded * 100 / total)
+                self.progress_bar.setValue(percent)
+
+            speed = _strip_ansi(d.get("_speed_str", "N/A"))  # ← strip ici
+            eta = _strip_ansi(d.get("_eta_str", "N/A"))  # ← et ici
+            self.speed_label.setText(f"Téléchargement : {speed}")
+            self.eta_label.setText(f"Temps restant : {eta}")
+
+        elif status == "finished":
+            self.logger.info(f"Téléchargement terminé : {d.get('filename')}")
+            self.statusBar().showMessage("Téléchargement terminé.", self.DEFAULT_DELAY_STATUSBAR)
+            self.progress_bar.setValue(100)
+            self.speed_label.setText("Téléchargement : terminé")
+            self.eta_label.setText("Temps restant : --")
+
+        elif status == "error":
+            self.logger.error(f"Erreur lors du téléchargement.")
+            self.statusBar().showMessage("Erreur lors du téléchargement.", 10000)
+            self.speed_label.setText("Téléchargement : erreur")
+            self.resetInfo(isLoading=False, isDownloading=True)
+
+    def on_download_finished(self):
+        """
+        Slot for when the download thread is fully done.
+        """
+        self.ytDL_interface.set_cancel_flag(None)
+        self.download_button.setEnabled(True)  # ← réactive
+        self.statusBar().showMessage("Téléchargement terminé.", self.DEFAULT_DELAY_STATUSBAR)
+        self.ytDL_interface.set_progress_callback(None)
+
+    def on_download_error(self, e: yt_dlp.utils.DownloadError | Exception):
+        """
+        Slot for when the download thread raised an exception.
+        """
+        errorMsg = ""
+        if type(e) is yt_dlp.utils.DownloadError:
+            assert e.msg is not None
+            errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
+        elif type(e) is Exception:
+            errorMsg = str(e)
+        self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
+
+        self.download_button.setEnabled(True)
+        # self.cancel_button.setEnabled(False)
+        self.resetInfo(isLoading=False, isDownloading=True)
 
     def select_download_directory(self):
         """
@@ -460,15 +469,3 @@ class MainWindow(QMainWindow):
 
         if directory:
             self.destination_edit.setText(directory)
-
-
-def clean_url(url, keep_params=("v",)):
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-    filtered = {k: v[0] for k, v in query.items() if k in keep_params}
-    new_query = urlencode(filtered)
-    return urlunparse(parsed._replace(query=new_query))
-
-def _strip_ansi(text: str) -> str:
-    """Remove ANSI terminal escape sequences from a string."""
-    return sub(r'\x1b\[[0-9;]*m', '', text)

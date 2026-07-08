@@ -4,72 +4,32 @@
 
 
 # TODO : 
-- [x] Get format list
-- [x] Find a way to make a "formulaire" since we need to select video or audio, perhaps it's not really usefull ? will see
-- [x] Make the query in a thread.
-- [x] make an equivalent of `yt-dlp -f bestvideo+bestaudio URL`
-- [x] Make an .exe installer via pyinstaller
-- [x] Think how to handle FFMPEG
-- [x] Logging system ? 
+- [x] Better info in size (limit to 2 decimals, and handle MB, GB)
 - [ ] Cancel Btn when downloading   
+- [ ] Make the statusBar update acordingly
+- [ ] Better handle the output (user can't overwrite the name of the file currently & the input is a dir, but the output is a file)
 - [ ] Make a Icon ? 
+- [ ] GUI HELP : 
+Prompt : 
+```
+Comment je pourrais faire une help a mon GUI ? C'est très rapide en vrai y'a X etapes : 
 
-## TODO - Error handler
+1. Charger une URL dans le champs "URL"
+2. Selectionner le type , video ou audio.
+3. Clique sur charger
+(techniquement y'a un cas ici ou ca plante mais on le met de coté)
+4. Choisir la qualité dans la liste déroulante
+5. Sélectionner dans quel dossier il va aller (le nom du fichier sera crée automatiquement)
+```
+
+## ISSUE - Error handler
 - [x]  If i query twice, some info stack
 - [x]  No url given
 - [x]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
 - [x]  No output given
 - [x] Handle timeout/no Internet, no youtube video
-- [ ] Reset info when error in download
+- [x] Reset info when error in download
 
-# Issues : 
-- setFixedSize & setMinimumSize not working.
-
-
-
-# Gui : 
-
-```txt
-┌──────────────────────────────────────────────────────────────┐
-│ URL                                                         │
-│ ┌──────────────────────────────────────────────┐ [ Charger ]│
-│ │ https://youtube.com/watch?v=xxxx             │            │
-│ └──────────────────────────────────────────────┘            │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│ ┌──────────────┐  Titre de la vidéo                          │
-│ │              │  Chaîne Youtube                             │
-│ │  Miniature   │  Durée : 12:34                              │
-│ │              │                                              │
-│ └──────────────┘                                              │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│ Type                                                        │
-│ ○ Vidéo                                                     │
-│ ○ Audio                                                     │
-│                                                              │
-│ Qualité                                                     │
-│ ┌────────────────────┐                                      │
-│ │ 1080p MP4          ▼│                                      │
-│ └────────────────────┘                                      │
-│                                                              │
-│ Dossier                                                     │
-│ ┌─────────────────────────────┐ [ Parcourir ]               │
-│ │ C:\Downloads                │                             │
-│ └─────────────────────────────┘                             │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│ [====================          ] 62 %                        │
-│ Téléchargement : 3.2 MB/s                                   │
-│ Temps restant : 00:12                                       │
-│                                                              │
-│                          [ Télécharger ]                    │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-
-```
 
 
 # How to launch CI/CD : 

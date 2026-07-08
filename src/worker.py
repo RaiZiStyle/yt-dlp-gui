@@ -9,12 +9,17 @@ class Worker(QObject):
     result = Signal(object)
     error = Signal(Exception)
     progress = Signal(dict)  # relays yt-dlp's progress_hook dict to the UI thread
-    
+
     def __init__(self, fn, *args, **kwargs):
         super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
+        self._cancelled = False  
+
+    def cancel(self):
+        """Call this from the UI thread to request cancellation."""
+        self._cancelled = True
 
     @Slot()
     def run(self):
