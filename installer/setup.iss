@@ -4,7 +4,7 @@
   #define MyAppVersion "0.0.0"
 #endif
 #define MyAppPublisher "Arthur Guyot--Premel"
-#define MyAppExeName "yt-dlp-gui_{#MyAppVersion}.exe"
+#define MyAppExeName "yt-dlp-gui.exe"
 #define MyAppSourceDir "..\dist\yt-dlp-gui"
 
 [Setup]
@@ -41,7 +41,7 @@ Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 
 [Run]
 ; Lance l'app après installation (optionnel)
-Filename: "{app}\yt-dlp-gui_{#MyAppVersion}.exe"; Description: "Lancer {#MyAppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Lancer {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 ; Nettoie les fichiers créés par l'app à la désinstallation
