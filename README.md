@@ -7,8 +7,8 @@ Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
 # TODO : 
 - [x] Better info in size (limit to 2 decimals, and handle MB, GB)
-- [ ] Cancel Btn when downloading   
-- [ ] Make the statusBar update acordingly
+- [x] Cancel Btn when downloading   
+    - [x] Make the statusBar update acordingly
 - [ ] Better handle the output (user can't overwrite the name of the file currently & the input is a dir, but the output is a file)
 - [ ] Make a Icon ? 
 - [ ] GUI HELP : 

@@ -29,6 +29,13 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Inject version from git tag in src/version.py
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          (Get-Content src/version.py) -replace '"dev"', "`"$version`"" | Set-Content src/version.py
+          cat src/version.py   # vérification dans les logs CI
+
       - name: Build with PyInstaller
         run: pyinstaller --noconfirm yt-dlp-gui.spec
 

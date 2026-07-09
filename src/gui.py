@@ -2,6 +2,7 @@
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
 from utils import get_logger, _strip_ansi, clean_url
+from version import __version__
 
 from pathlib import Path
 from PySide6.QtCore import Qt, QThread
@@ -25,7 +26,10 @@ from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
 from re import sub
 import requests
+
 import yt_dlp
+
+from yt_dlp.utils import DownloadError
 
 URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
@@ -50,7 +54,7 @@ class MainWindow(QMainWindow):
         self.ytDL_interface = YoutubeDL_interface()
         self.statusBar()  # active la barre
 
-        self.setWindowTitle("yt-dlp GUI")
+        self.setWindowTitle(f"yt-dlp GUI v{__version__}")
         self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
         self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
 
@@ -197,7 +201,7 @@ class MainWindow(QMainWindow):
         self.cancel_button = QPushButton("Annuler")
         self.cancel_button.setEnabled(False)
         button_layout.addWidget(self.cancel_button)
-        self.cancel_button.clicked.connect(self.on_cancel)
+        
 
         # ==================================================
         # Main Layout
@@ -211,11 +215,11 @@ class MainWindow(QMainWindow):
         # ==================================================
         # Signals
         # ==================================================
-
         self.browse_button.clicked.connect(self.select_download_directory)
         self.audio_radio.toggled.connect(self.update_quality_list)
         self.load_button.clicked.connect(self.on_load)
         self.download_button.clicked.connect(self.on_download)
+        self.cancel_button.clicked.connect(self.on_cancel)
 
         print(f"Size : {self.size}")
 
@@ -246,7 +250,8 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setText("Miniature")
         if isDownloading:
             self.progress_bar.setValue(0)
-            self.speed_label.setText("Téléchargement : erreur")
+            self.speed_label.setText("Téléchargement : --")   # ← neutre, pas "erreur"
+            self.eta_label.setText("Temps restant : --")       # ← remet à zéro
 
     # def resizeEvent(self, event):
     #     new_size = event.size()
@@ -320,7 +325,7 @@ class MainWindow(QMainWindow):
         # Peuple la combo
         self.update_quality_list()
 
-    def on_query_error(self, e: yt_dlp.utils.DownloadError):
+    def on_query_error(self, e: DownloadError):
         """
         Slot for when the thread of query is finish with an error| Exception
         """
@@ -394,7 +399,7 @@ class MainWindow(QMainWindow):
 
     def on_cancel(self):
         """
-        1
+        Slot for when the cancel button is clicked.
         """
         if hasattr(self, "worker") and self.worker:
             self.logger.info("Cancel download")
@@ -436,27 +441,41 @@ class MainWindow(QMainWindow):
     def on_download_finished(self):
         """
         Slot for when the download thread is fully done.
+        Always called after on_download_error if there was an error/cancellation.
+        Only update UI here if it wasn't an error (error slot already handled it).
         """
         self.ytDL_interface.set_cancel_flag(None)
-        self.download_button.setEnabled(True)  # ← réactive
-        self.statusBar().showMessage("Téléchargement terminé.", self.DEFAULT_DELAY_STATUSBAR)
         self.ytDL_interface.set_progress_callback(None)
+        self.download_button.setEnabled(True)
+        self.cancel_button.setEnabled(False)
+        # Ne touche PAS la statusBar ni les labels ici —
+        # on_download_error les a déjà mis à jour si nécessaire,
+        # et on_download_progress gère le cas "finished" normal.
 
-    def on_download_error(self, e: yt_dlp.utils.DownloadError | Exception):
+    def on_download_error(self, e: DownloadError | Exception):
         """
         Slot for when the download thread raised an exception.
         """
-        errorMsg = ""
-        if type(e) is yt_dlp.utils.DownloadError:
-            assert e.msg is not None
-            errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
-        elif type(e) is Exception:
-            errorMsg = str(e)
-        self.statusBar().showMessage(f"Erreur  : {errorMsg}", 10000)
+        is_cancelled = "cancelled" in str(e).lower()
+
+        if is_cancelled:
+            self.statusBar().showMessage("Téléchargement annulé.", self.DEFAULT_DELAY_STATUSBAR)
+            self.progress_bar.setValue(0)
+            self.speed_label.setText("Téléchargement : annulé")
+            self.eta_label.setText("Temps restant : --")
+        else:
+            errorMsg = ""
+            if isinstance(e, DownloadError) and e.msg is not None:
+                errorMsg = _strip_ansi(e.msg).split(":")[-1].strip()
+            else:
+                errorMsg = str(e)
+            self.statusBar().showMessage(f"Erreur : {errorMsg}", 10000)
+            self.speed_label.setText("Téléchargement : erreur")
+            self.eta_label.setText("Temps restant : --")
 
         self.download_button.setEnabled(True)
-        # self.cancel_button.setEnabled(False)
-        self.resetInfo(isLoading=False, isDownloading=True)
+        self.cancel_button.setEnabled(False)
+        self.progress_bar.setValue(0)
 
     def select_download_directory(self):
         """

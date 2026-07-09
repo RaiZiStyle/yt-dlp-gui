@@ -1,0 +1,1 @@
+__version__ = "dev" # Replace by CI/CD

@@ -62,9 +62,10 @@ class YoutubeDL_interface:
         # downloaded_bytes, total_bytes / total_bytes_estimate, speed, eta,
         # _percent_str, _speed_str, _eta_str (see yt-dlp progress_hooks docs)
         # Cancellation: raising from the hook stops yt-dlp cleanly
-        self.logger.info(f"Progress hook called with status: {d.get('status')}")
-        self.logger.info(f"State of cancel flag: {self._cancel_flag}")
+        # self.logger.info(f"Progress hook called with status: {d.get('status')}")
+        # self.logger.info(f"State of cancel flag: {self._cancel_flag}")
         if self._cancel_flag and self._cancel_flag():
+            self.logger.info("Download cancelled by user")
             raise Exception("Download cancelled by user")
         if self.progress_callback is not None:
             self.progress_callback(d)
