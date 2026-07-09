@@ -57,8 +57,8 @@ class MainWindow(QMainWindow):
         self.statusBar()  # active la barre
 
         self.setWindowTitle(f"yt-dlp GUI v{__version__}")
-        self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
-        self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
+        # self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
+        # self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
 
         central = QWidget()
         # central.setMinimumSize(780, 620)  # ← sur le widget central

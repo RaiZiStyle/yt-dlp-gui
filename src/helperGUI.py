@@ -26,6 +26,6 @@ class HelpDialog(QDialog):
             layout.addWidget(title_label)
             layout.addWidget(body_label)
 
-        buttons = QDialogButtonBox(QDialogButtonBox.Ok)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(self.accept)
         layout.addWidget(buttons)

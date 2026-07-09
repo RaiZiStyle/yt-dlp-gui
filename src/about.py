@@ -14,7 +14,7 @@ class AboutDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("À propos")
         self.setFixedWidth(420)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
 
         layout = QVBoxLayout(self)
         layout.setSpacing(0)
@@ -26,7 +26,7 @@ class AboutDialog(QDialog):
 
         icon_label = QLabel("▶")
         icon_label.setFixedSize(52, 52)
-        icon_label.setAlignment(Qt.AlignCenter)
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_label.setStyleSheet("""
             font-size: 22px;
             background: #e6f1fb;
@@ -58,7 +58,7 @@ class AboutDialog(QDialog):
 
         avatar = QLabel("AG")
         avatar.setFixedSize(36, 36)
-        avatar.setAlignment(Qt.AlignCenter)
+        avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar.setStyleSheet("""
             background: #e6f1fb; border-radius: 18px;
             font-size: 12px; font-weight: bold; color: #185fa5;
@@ -66,7 +66,7 @@ class AboutDialog(QDialog):
 
         author_text = QVBoxLayout()
         author_text.setSpacing(1)
-        name_label = QLabel("Arthur Guyot-Prémel")
+        name_label = QLabel("Arthur Guyot-Premel")
         name_label.setStyleSheet("font-size: 14px; font-weight: bold;")
         pseudo_label = QLabel("RaiZiStyle")
         pseudo_label.setStyleSheet("font-size: 12px; color: gray;")
@@ -133,6 +133,6 @@ class AboutDialog(QDialog):
 
     def _separator(self):
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
+        line.setFrameShape(QFrame.Shape.HLine)
         line.setStyleSheet("color: #e0e0e0;")
         return line

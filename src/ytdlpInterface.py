@@ -4,8 +4,11 @@ from utils import get_logger, format_size
 
 from pathlib import Path
 from enum import Enum
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, cast
+
+
 import yt_dlp
+from yt_dlp.utils import DownloadError
 
 
 class E_QUERY_TYPE(Enum):
@@ -47,7 +50,7 @@ class YoutubeDL_interface:
 
         self.logger = get_logger(__name__)
 
-    def _base_opts(self) -> dict:
+    def _base_opts(self) -> dict[str, object]:
         """Options shared by every YoutubeDL instance."""
         return {
             "socket_timeout": YoutubeDL_interface.TIMEOUT,
@@ -121,14 +124,14 @@ class YoutubeDL_interface:
         else:
             self.query_type = E_QUERY_TYPE.UNKNOWN
 
-        info: dict | None = None
+        info: Any | None = None
         try:
             ydl_opts = self._base_opts()
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:  # Trick for pylance to be happy with the type.
                 self.logger.info(f"Query url : {url}")
                 info = ydl.extract_info(url, download=False)
             self.logger.info("Query succeeded")
-        except yt_dlp.utils.DownloadError as e:
+        except DownloadError as e:
             self.logger.error(f"DownloadError : {e}")
             raise e
 
@@ -185,9 +188,9 @@ class YoutubeDL_interface:
             return
 
         try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
                 ydl.download([url])
-        except yt_dlp.utils.DownloadError as e:
+        except DownloadError as e:
             self.logger.error(f"Error during download : {e}")
 
     def set_progress_callback(self, callback: Optional[Callable[[dict], None]]) -> None:
