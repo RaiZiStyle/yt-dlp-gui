@@ -1,7 +1,9 @@
 # LOCAL IMPORTS
+from about import AboutDialog
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
 from utils import get_logger, _strip_ansi, clean_url
+from helperGUI import HelpDialog
 from version import __version__
 
 from pathlib import Path
@@ -64,8 +66,26 @@ class MainWindow(QMainWindow):
 
         main_layout = QVBoxLayout(central)
         main_layout.setSpacing(10)
-        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  # ← ajoute ça
+        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  
+        
 
+        
+        
+        # ==================================================
+        # Toolbar
+        # ==================================================
+        toolbar = self.addToolBar("Aide")
+        toolbar.setMovable(False)
+        help_action = toolbar.addAction("Aide")
+        help_action.setToolTip("Aide")
+        help_action.triggered.connect(self.on_help)
+
+        # ==================================================
+        # About
+        # ==================================================
+        about_action = toolbar.addAction("À propos")
+        about_action.triggered.connect(self.on_about)
+        
         # ==================================================
         # URL
         # ==================================================
@@ -221,8 +241,13 @@ class MainWindow(QMainWindow):
         self.download_button.clicked.connect(self.on_download)
         self.cancel_button.clicked.connect(self.on_cancel)
 
-        print(f"Size : {self.size}")
-
+    def on_help(self):
+        dialog = HelpDialog(self)
+        dialog.exec()
+        
+    def on_about(self):
+        AboutDialog(self).exec()
+        
     def update_quality_list(self):
         """
         Updated the `self.quality_combo` based on `self.formats`
@@ -252,6 +277,7 @@ class MainWindow(QMainWindow):
             self.progress_bar.setValue(0)
             self.speed_label.setText("Téléchargement : --")   # ← neutre, pas "erreur"
             self.eta_label.setText("Temps restant : --")       # ← remet à zéro
+
 
     # def resizeEvent(self, event):
     #     new_size = event.size()

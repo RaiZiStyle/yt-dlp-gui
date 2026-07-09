@@ -9,7 +9,7 @@ import sys
     
 
 if __name__ == "__main__":
-    from gui import MainWindow
+    from GUI import MainWindow
     app = QApplication(sys.argv)
 
     app.setStyle("Fusion")
