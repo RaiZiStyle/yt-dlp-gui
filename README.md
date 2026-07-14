@@ -28,4 +28,4 @@ Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 For support, please open an issue on the GitHub repository.
 
 # Licence 
-Ce projet est sous licence MIT. Consultez le fichier LICENSE pour plus de détails.
+This project is licensed under the Unlicense. See the [LICENSE](LICENSE) file for details.
