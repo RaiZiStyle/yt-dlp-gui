@@ -10,7 +10,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QIcon, QPixmap
-
+from pathlib import Path
+import sys
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
@@ -54,6 +55,27 @@ class AboutDialog(QDialog):
         header.addLayout(title_layout)
         header.addStretch()
         layout.addLayout(header)
+        
+        # --- Separator ---
+        separator = QFrame()
+        separator.setFrameShape(QFrame.Shape.HLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
+        layout.addWidget(separator)
+
+        # --- Installation Path ---
+        install_path_label = QLabel("Chemin d'installation :")
+        install_path_label.setStyleSheet("font-size: 14px; margin-top: 10px;")
+        layout.addWidget(install_path_label)
+
+        install_path_value = QLabel(self.get_installation_folder())
+        install_path_value.setStyleSheet("font-size: 12px; color: gray;")
+        install_path_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(install_path_value)
+
+        open_folder_button = QPushButton("Ouvrir le dossier")
+        open_folder_button.clicked.connect(self.open_installation_folder)
+        layout.addWidget(open_folder_button)
+        
 
         layout.addSpacing(16)
         layout.addWidget(self._separator())
@@ -138,6 +160,16 @@ class AboutDialog(QDialog):
         footer.addWidget(close_btn)
         layout.addLayout(footer)
 
+    def get_installation_folder(self) -> str:
+        if getattr(sys, 'frozen', False):  # Application packagée avec PyInstaller
+            return str(Path(sys.executable).parent)
+        else:  # Mode développement
+            return str(Path(__file__).parent)
+
+    def open_installation_folder(self):
+        folder_path = self.get_installation_folder()
+        QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
+        
     def _separator(self):
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
