@@ -39,6 +39,9 @@ def get_logger(name: str | None = None) -> Logger:
     return logger
 
 
+logger = get_logger(__name__)
+
+
 def format_size(octets: int) -> str:
     units = ["o", "Ko", "Mo", "Go", "To", "Po", "Eo"]
     size = float(octets)
@@ -68,6 +71,7 @@ def _strip_ansi(text: str) -> str:
 
 def get_asset(filename: str) -> Path:
     """Résout le chemin vers assets/ que ce soit en dev ou dans le bundle PyInstaller."""
+    logger.debug(f"Getting asset path for: {filename}")
     if getattr(sys, "frozen", False):
         base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
     else:
