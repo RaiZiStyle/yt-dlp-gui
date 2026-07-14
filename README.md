@@ -17,6 +17,7 @@ Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
 - Help more sexy ? 
 - Issue template in github
+- English & french translate ? 
 <!-- - In about, show where the software is installed  -->
 
 # Info in the README for user : 
