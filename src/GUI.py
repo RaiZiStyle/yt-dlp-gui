@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
     TITLE_PREFIX = "Titre de la vidéo : "
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
-    DESTIATION_PREFIX = str(Path("").resolve())
+    DESTIATION_PREFIX = str(Path.home() / "Downloads")
 
     HEIGH_SIZE = 800
     WIDTH_SIZE = 680
@@ -283,7 +283,7 @@ class MainWindow(QMainWindow):
         self.logger.debug(f"New size : {new_size.width()} x {new_size.height()}")
 
         super().resizeEvent(event)  # important
-        
+
     def on_load(self):
         """
         Launch the query thread for `YoutubeDL_interface`.
@@ -350,7 +350,7 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
-        self.destination_edit.setText(self.DESTIATION_PREFIX + "/" + self.videoMetadata.get("title", "N/A") + "." + self.ytDL_interface._base_opts().get("format", ""))
+        self.destination_edit.setText(str(Path(self.DESTIATION_PREFIX) / self.videoMetadata.get("title", "N/A")))
 
     def on_query_error(self, e: DownloadError):
         """
