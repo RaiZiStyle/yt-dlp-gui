@@ -7,7 +7,7 @@ a = Analysis(
     binaries=[],
     datas=[
         # Si tu as des fichiers de ressources (icônes, etc.)
-        # ('src/assets', 'assets'),
+        ('assets', 'assets'),
     ],
     hiddenimports=[
         *collect_submodules('yt_dlp'),
@@ -41,7 +41,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # icon='src/assets/icon.ico',  # ← décommente si tu as une icône
+    icon='assets/icon.ico',  
 )
 
 coll = COLLECT(

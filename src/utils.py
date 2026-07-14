@@ -3,6 +3,7 @@ from re import sub
 from pathlib import Path
 from logging  import Logger, StreamHandler, Formatter, DEBUG, INFO, getLogger, FileHandler
 import os
+import sys
 
 
 _logger_configured = False
@@ -60,3 +61,11 @@ def clean_url(url, keep_params=("v",)):
 def _strip_ansi(text: str) -> str:
     """Remove ANSI terminal escape sequences from a string."""
     return sub(r'\x1b\[[0-9;]*m', '', text)
+
+def get_asset(filename: str) -> Path:
+    """Résout le chemin vers assets/ que ce soit en dev ou dans le bundle PyInstaller."""
+    if getattr(sys, 'frozen', False):
+        base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    else:
+        base = Path(__file__).parent.parent
+    return base / "assets" / filename

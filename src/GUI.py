@@ -2,7 +2,7 @@
 from about import AboutDialog
 from ytdlpInterface import YoutubeDL_interface
 from worker import Worker
-from utils import get_logger, _strip_ansi, clean_url
+from utils import get_logger, _strip_ansi, clean_url, get_asset
 from helperGUI import HelpDialog
 from version import __version__
 
@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PySide6.QtGui import QIcon
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
 from re import sub
@@ -43,6 +44,7 @@ class MainWindow(QMainWindow):
     TITLE_PREFIX = "Titre de la vidéo : "
     CHANNEL_PREFIX = "Chaîne Youtube : "
     DURATION_PREFIX = "Durée : "
+    DESTIATION_PREFIX = str(Path("").resolve())
 
     HEIGH_SIZE = 700
     WIDTH_SIZE = 600
@@ -54,6 +56,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.logger = get_logger(MainWindow.__name__)
         self.ytDL_interface = YoutubeDL_interface()
+        
+        self.setWindowIcon(QIcon(str(get_asset("icon.png"))))
+        
         self.statusBar()  # active la barre
 
         self.setWindowTitle(f"yt-dlp GUI v{__version__}")
@@ -166,7 +171,7 @@ class MainWindow(QMainWindow):
         # ==================================================
         destination_label = QLabel("Dossier")
         self.destination_layout = QHBoxLayout()
-        self.destination_edit = QLineEdit(str(Path("").resolve()))
+        self.destination_edit = QLineEdit(self.DESTIATION_PREFIX)
         self.browse_button = QPushButton("Parcourir")
 
         self.destination_layout.addWidget(self.destination_edit)
@@ -350,6 +355,7 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
+        self.destination_edit.setText(self.DESTIATION_PREFIX +"/" + self.videoMetadata.get("title", "N/A"))
 
     def on_query_error(self, e: DownloadError):
         """
@@ -368,15 +374,18 @@ class MainWindow(QMainWindow):
         """
         format_id = self.quality_combo.currentData()
         self.ytDL_interface.url
-        output_folder = self.destination_edit.text()
+        output_file = self.destination_edit.text()
+        output_dir = Path(output_file).parent
 
-        if output_folder == "":
+        if output_file == "":
             self.logger.error(f"ERROR : output is empty")
             exit()
-        pathOutput_folder = Path(output_folder)
-        if pathOutput_folder.is_dir() is False:
-            self.logger.error(f"ERROR : output is not directory {pathOutput_folder.resolve()}")
-            exit()
+        pathOutput_file = Path(output_file)
+        if pathOutput_file.is_dir() is True:
+            self.logger.error(f"ERROR : output is a directory {pathOutput_file.resolve()}")
+            return
+        elif pathOutput_file.exists() is False :
+            self.logger.info(f"ERROR : output file does not exist {pathOutput_file.resolve()}")
 
         self.progress_bar.setValue(0)
         self.speed_label.setText("Téléchargement : -- MB/s")
@@ -389,7 +398,7 @@ class MainWindow(QMainWindow):
             self.ytDL_interface.download,
             self.ytDL_interface.url,
             format_id,
-            pathOutput_folder,
+            pathOutput_file,
         )
 
         self.worker.moveToThread(self.downloadThread)

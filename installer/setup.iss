@@ -22,6 +22,9 @@ SolidCompression=yes
 WizardStyle=modern
 ; Demande les lowest privilèges pour l'installation 
 PrivilegesRequired=lowest
+; ICON
+SetupIconFile=..\assets\icon.ico          
+UninstallDisplayIcon={app}\yt-dlp-gui.exe     
 
 [Languages]
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
@@ -35,10 +38,9 @@ Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesub
 
 [Icons]
 ; Raccourci dans le menu Démarrer
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}";    Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"
 ; Raccourci sur le bureau (optionnel, coché par défaut)
-Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 [Run]
 ; Lance l'app après installation (optionnel)
 Filename: "{app}\{#MyAppExeName}"; Description: "Lancer {#MyAppName}"; Flags: nowait postinstall skipifsilent
