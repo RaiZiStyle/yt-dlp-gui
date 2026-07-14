@@ -1,5 +1,7 @@
 # about_dialog.py
 from version import __version__
+from utils import get_asset
+
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame
@@ -7,6 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtCore import QUrl
+from PySide6.QtGui import QIcon, QPixmap
 
 
 class AboutDialog(QDialog):
@@ -23,22 +26,26 @@ class AboutDialog(QDialog):
         # --- Header : icône + nom + version ---
         header = QHBoxLayout()
         header.setSpacing(14)
+        
+        pixmap = QPixmap()
+        pixmap.loadFromData(get_asset("icon.png").open("rb").read())
 
-        icon_label = QLabel("▶")
-        icon_label.setFixedSize(52, 52)
-        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_label.setStyleSheet("""
-            font-size: 22px;
-            background: #e6f1fb;
-            border-radius: 10px;
-            color: #185fa5;
-        """)
+        # Redimensionner pour tenir dans le label sans déformer
+        pixmap = pixmap.scaled(
+            64,
+            64,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        icon_label = QLabel()
+        icon_label.setPixmap(pixmap)
+
 
         title_layout = QVBoxLayout()
         title_layout.setSpacing(2)
         app_name = QLabel("yt-dlp GUI")
         app_name.setStyleSheet("font-size: 17px; font-weight: bold;")
-        version_label = QLabel(f"version {__version__}  ·  The Unlicense")
+        version_label = QLabel(f"version {__version__}  ·  Licence : The Unlicense")
         version_label.setStyleSheet("font-size: 12px; color: gray;")
         title_layout.addWidget(app_name)
         title_layout.addWidget(version_label)
@@ -56,8 +63,8 @@ class AboutDialog(QDialog):
         author_layout = QHBoxLayout()
         author_layout.setSpacing(12)
 
-        avatar = QLabel("AG")
-        avatar.setFixedSize(36, 36)
+        avatar = QLabel("AGP")
+        avatar.setFixedSize(48, 48)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
         avatar.setStyleSheet("""
             background: #e6f1fb; border-radius: 18px;
