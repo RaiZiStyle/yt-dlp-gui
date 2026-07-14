@@ -46,36 +46,34 @@ class MainWindow(QMainWindow):
     DURATION_PREFIX = "Durée : "
     DESTIATION_PREFIX = str(Path("").resolve())
 
-    HEIGH_SIZE = 700
-    WIDTH_SIZE = 600
+    HEIGH_SIZE = 800
+    WIDTH_SIZE = 680
+    MAX_SIZE_OFFSET = 200
 
     DEFAULT_DELAY_STATUSBAR = 5000  # ms
 
     def __init__(self):
-        
+
         super().__init__()
         self.logger = get_logger(MainWindow.__name__)
         self.ytDL_interface = YoutubeDL_interface()
-        
+
         self.setWindowIcon(QIcon(str(get_asset("icon.png"))))
-        
+
         self.statusBar()  # active la barre
 
         self.setWindowTitle(f"yt-dlp GUI v{__version__}")
-        # self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
-        # self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
-
+        self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
+        self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
+        self.setMaximumSize(MainWindow.WIDTH_SIZE+self.MAX_SIZE_OFFSET, MainWindow.HEIGH_SIZE+self.MAX_SIZE_OFFSET)  # ← bloque toute tentative de resize
+        
         central = QWidget()
         # central.setMinimumSize(780, 620)  # ← sur le widget central
         self.setCentralWidget(central)
 
         main_layout = QVBoxLayout(central)
         main_layout.setSpacing(10)
-        main_layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)  
-        
 
-        
-        
         # ==================================================
         # Toolbar
         # ==================================================
@@ -90,7 +88,7 @@ class MainWindow(QMainWindow):
         # ==================================================
         about_action = toolbar.addAction("À propos")
         about_action.triggered.connect(self.on_about)
-        
+
         # ==================================================
         # URL
         # ==================================================
@@ -226,7 +224,6 @@ class MainWindow(QMainWindow):
         self.cancel_button = QPushButton("Annuler")
         self.cancel_button.setEnabled(False)
         button_layout.addWidget(self.cancel_button)
-        
 
         # ==================================================
         # Main Layout
@@ -249,10 +246,10 @@ class MainWindow(QMainWindow):
     def on_help(self):
         dialog = HelpDialog(self)
         dialog.exec()
-        
+
     def on_about(self):
         AboutDialog(self).exec()
-        
+
     def update_quality_list(self):
         """
         Updated the `self.quality_combo` based on `self.formats`
@@ -280,9 +277,8 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setText("Miniature")
         if isDownloading:
             self.progress_bar.setValue(0)
-            self.speed_label.setText("Téléchargement : --")   # ← neutre, pas "erreur"
-            self.eta_label.setText("Temps restant : --")       # ← remet à zéro
-
+            self.speed_label.setText("Téléchargement : --")  # ← neutre, pas "erreur"
+            self.eta_label.setText("Temps restant : --")  # ← remet à zéro
 
     # def resizeEvent(self, event):
     #     new_size = event.size()
@@ -355,7 +351,7 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
-        self.destination_edit.setText(self.DESTIATION_PREFIX +"/" + self.videoMetadata.get("title", "N/A"))
+        self.destination_edit.setText(self.DESTIATION_PREFIX + "/" + self.videoMetadata.get("title", "N/A") + self.ytDL_interface._base_opts().get("format", ""))
 
     def on_query_error(self, e: DownloadError):
         """
@@ -384,7 +380,7 @@ class MainWindow(QMainWindow):
         if pathOutput_file.is_dir() is True:
             self.logger.error(f"ERROR : output is a directory {pathOutput_file.resolve()}")
             return
-        elif pathOutput_file.exists() is False :
+        elif pathOutput_file.exists() is False:
             self.logger.info(f"ERROR : output file does not exist {pathOutput_file.resolve()}")
 
         self.progress_bar.setValue(0)
@@ -406,7 +402,7 @@ class MainWindow(QMainWindow):
         self.download_button.setEnabled(False)  # ← désactive pendant le DL
         self.cancel_button.setEnabled(True)  # ← active le bouton annuler
 
-        self.ytDL_interface.set_cancel_flag(lambda : self.worker._cancelled)
+        self.ytDL_interface.set_cancel_flag(lambda: self.worker._cancelled)
         self.ytDL_interface.set_progress_callback(self.worker.progress.emit)
 
         # yt-dlp's progress_hook runs INSIDE the worker thread (it's called
