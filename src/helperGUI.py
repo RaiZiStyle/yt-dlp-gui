@@ -1,5 +1,4 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QDialogButtonBox
-from PySide6.QtCore import Qt
 
 
 class HelpDialog(QDialog):

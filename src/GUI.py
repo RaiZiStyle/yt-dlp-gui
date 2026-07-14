@@ -25,19 +25,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtGui import QIcon
-from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from PySide6.QtGui import QPixmap
-from re import sub
 import requests
 
-import yt_dlp
 
 from yt_dlp.utils import DownloadError
 
 URL_THAT_FAILED = "https://www.youtube.com/watch?v=9J62hGda9BQ&list=RD9J62hGda9BQ&start_radio=1"
 
 DEFAULT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-DEFAULT_URL = URL_THAT_FAILED
+# DEFAULT_URL = URL_THAT_FAILED
 
 
 class MainWindow(QMainWindow):
