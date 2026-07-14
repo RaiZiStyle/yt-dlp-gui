@@ -375,13 +375,17 @@ class MainWindow(QMainWindow):
 
         if output_file == "":
             self.logger.error(f"ERROR : output is empty")
+            self.statusBar().showMessage(f"Erreur : le chemin de sortie est vide", 10000)
             exit()
         pathOutput_file = Path(output_file)
         if pathOutput_file.is_dir() is True:
             self.logger.error(f"ERROR : output is a directory {pathOutput_file.resolve()}")
+            self.statusBar().showMessage(f"Erreur : chemin est un dossier {pathOutput_file.resolve()}", 10000)
             return
         elif pathOutput_file.exists() is False:
             self.logger.info(f"ERROR : output file does not exist {pathOutput_file.resolve()}")
+            self.statusBar().showMessage(f"Erreur : le fichier de sortie n'existe pas {pathOutput_file.resolve()}", 10000)
+            return
 
         self.progress_bar.setValue(0)
         self.speed_label.setText("Téléchargement : -- MB/s")
