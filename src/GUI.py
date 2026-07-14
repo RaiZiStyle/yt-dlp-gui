@@ -280,11 +280,13 @@ class MainWindow(QMainWindow):
             self.speed_label.setText("Téléchargement : --")  # ← neutre, pas "erreur"
             self.eta_label.setText("Temps restant : --")  # ← remet à zéro
 
-    # def resizeEvent(self, event):
-    #     new_size = event.size()
-    #     print(f"Nouvelle taille : {new_size.width()} x {new_size.height()}")
+    def resizeEvent(self, event):
+        new_size = event.size()
+        # TODO: REMOVE CAUSE IT'S SPAMMY
+        self.logger.debug(f"New size : {new_size.width()} x {new_size.height()}")
 
-    #     super().resizeEvent(event)  # important
+        super().resizeEvent(event)  # important
+        
     def on_load(self):
         """
         Launch the query thread for `YoutubeDL_interface`.
