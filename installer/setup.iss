@@ -40,7 +40,7 @@ Source: "{#MyAppSourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesub
 ; Raccourci dans le menu Démarrer
 Name: "{group}\{#MyAppName}";    Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"
 ; Raccourci sur le bureau (optionnel, coché par défaut)
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{userdesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 [Run]
 ; Lance l'app après installation (optionnel)
 Filename: "{app}\{#MyAppExeName}"; Description: "Lancer {#MyAppName}"; Flags: nowait postinstall skipifsilent
