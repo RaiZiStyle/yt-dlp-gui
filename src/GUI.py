@@ -65,8 +65,8 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(f"yt-dlp GUI v{__version__}")
         self.resize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)
         self.setMinimumSize(MainWindow.WIDTH_SIZE, MainWindow.HEIGH_SIZE)  # ← bloque toute tentative de resize
-        self.setMaximumSize(MainWindow.WIDTH_SIZE+self.MAX_SIZE_OFFSET, MainWindow.HEIGH_SIZE+self.MAX_SIZE_OFFSET)  # ← bloque toute tentative de resize
-        
+        self.setMaximumSize(MainWindow.WIDTH_SIZE + self.MAX_SIZE_OFFSET, MainWindow.HEIGH_SIZE + self.MAX_SIZE_OFFSET)  # ← bloque toute tentative de resize
+
         central = QWidget()
         # central.setMinimumSize(780, 620)  # ← sur le widget central
         self.setCentralWidget(central)
@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
             self.thumbnail_label.setPixmap(pixmap)
         # Peuple la combo
         self.update_quality_list()
-        self.destination_edit.setText(self.DESTIATION_PREFIX + "/" + self.videoMetadata.get("title", "N/A") + self.ytDL_interface._base_opts().get("format", ""))
+        self.destination_edit.setText(self.DESTIATION_PREFIX + "/" + self.videoMetadata.get("title", "N/A") + "." + self.ytDL_interface._base_opts().get("format", ""))
 
     def on_query_error(self, e: DownloadError):
         """
