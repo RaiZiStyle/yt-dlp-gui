@@ -1,3 +1,11 @@
+![YT-DLP-GUI](assets/icon.ico)
+
+![Build Status](https://github.com/RaiZiStyle/yt-dlp-gui/actions/workflows/release.yml/badge.svg)
+![Version](https://img.shields.io/github/v/tag/RaiZiStyle/yt-dlp-gui?label=Version&sort=semver)
+![Python](https://img.shields.io/badge/Python-3.12+-green?logo=python)
+![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+![License](https://img.shields.io/badge/License-Unlicense-red)
+
 # References : 
 
 - https://github.com/yt-dlp/yt-dlp
@@ -5,24 +13,19 @@
 Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
 
-# TODO : 
-- [x] Better info in size (limit to 2 decimals, and handle MB, GB)
-- [x] Cancel Btn when downloading   
-    - [x] Make the statusBar update acordingly
-- [x] GUI HELP : 
-- [ ] Better handle the output (user can't overwrite the name of the file currently & the input is a dir, but the output is a file)
-- [ ] Make a Icon ? 
+# TODO DEV : 
 
+- Help more sexy ? 
+- Issue template in github
+<!-- - In about, show where the software is installed  -->
 
-## ISSUE - Error handler
-- [x]  If i query twice, some info stack
-- [x]  No url given
-- [x]  Handle playlist (see `URL_THAT_FAILED`) (pretty simple, clean the url)
-- [x]  No output given
-- [x] Handle timeout/no Internet, no youtube video
-- [x] Reset info when error in download
+# Info in the README for user : 
 
+- How to use (see GUI.py)
+- 
 
+# Support
+For support, please open an issue on the GitHub repository.
 
-# How to launch CI/CD : 
-`git tag -a vx.y.z -m "message"`
+# Licence 
+Ce projet est sous licence MIT. Consultez le fichier LICENSE pour plus de détails.
