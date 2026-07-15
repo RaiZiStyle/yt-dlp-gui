@@ -174,7 +174,8 @@ class YoutubeDL_interface:
         ydl_opts["quiet"] = False
         ydl_opts["progress_hooks"] = [self._internal_progress_hook]
         # outtmpl expects a filename template, not just a folder
-        ydl_opts["outtmpl"] = str(output_folder.resolve() / "%(title)s.%(ext)s")
+        # ydl_opts["outtmpl"] = str(output_folder.resolve() / "%(title)s.%(ext)s")
+        ydl_opts["outtmpl"] = str(output_folder.resolve()) + ".%(ext)s"
         self.logger.info(f"outtmpl : {ydl_opts['outtmpl']}")
 
         if self.query_type is E_QUERY_TYPE.VIDEO:

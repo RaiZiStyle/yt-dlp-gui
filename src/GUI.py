@@ -381,9 +381,9 @@ class MainWindow(QMainWindow):
             self.logger.error(f"ERROR : output is a directory {pathOutput_file.resolve()}")
             self.statusBar().showMessage(f"Erreur : chemin est un dossier {pathOutput_file.resolve()}", 10000)
             return
-        elif pathOutput_file.exists() is False:
-            self.logger.info(f"ERROR : output file does not exist {pathOutput_file.resolve()}")
-            self.statusBar().showMessage(f"Erreur : le fichier de sortie n'existe pas {pathOutput_file.resolve()}", 10000)
+        elif pathOutput_file.exists() is True:
+            self.logger.info(f"ERROR : output file already exists {pathOutput_file.resolve()}")
+            self.statusBar().showMessage(f"Erreur : le fichier de sortie existe déjà {pathOutput_file.resolve()}", 10000)
             return
 
         self.progress_bar.setValue(0)
