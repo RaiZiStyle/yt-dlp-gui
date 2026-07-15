@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QRadioButton,
     QVBoxLayout,
     QWidget,
+    QMessageBox,
 )
 from PySide6.QtGui import QIcon
 from PySide6.QtGui import QPixmap
@@ -48,6 +49,7 @@ class MainWindow(QMainWindow):
     MAX_SIZE_OFFSET = 200
 
     DEFAULT_DELAY_STATUSBAR = 5000  # ms
+    GITHUB_REPO = "RaiZiStyle/yt-dlp-gui"  # 
 
     def __init__(self):
 
@@ -230,6 +232,9 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(options_group)
         main_layout.addWidget(progress_group)
         main_layout.addLayout(button_layout)
+        
+        
+        self.check_for_update()
 
         # ==================================================
         # Signals
@@ -522,3 +527,39 @@ class MainWindow(QMainWindow):
 
         if directory:
             self.destination_edit.setText(directory)
+
+    def check_for_update(self):
+        """Check latest GitHub release tag against current __version__."""
+        try:
+            r = requests.get(
+                f"https://api.github.com/repos/{self.GITHUB_REPO}/releases/latest",
+                timeout=5,
+            )
+            r.raise_for_status()
+            data = r.json()
+            latest = data.get("tag_name", "").lstrip("v")
+            current = __version__.lstrip("v")
+
+            if not latest or latest == current:
+                self.logger.debug("App is up to date.")
+                return
+
+            # Récupère le lien du .exe dans les assets
+            download_url = next(
+                (a["browser_download_url"] for a in data.get("assets", []) if a["name"].endswith(".exe")),
+                data.get("html_url", ""),  # fallback sur la page de release
+            )
+
+            self.logger.info(f"Update available: {current} → {latest}")
+
+            msg = QMessageBox(self)
+            msg.setWindowTitle("Mise à jour disponible")
+            msg.setIcon(QMessageBox.Information)
+            msg.setText(f"Une nouvelle version est disponible : <b>v{latest}</b><br>(version actuelle : v{current})")
+            msg.setInformativeText(f'<a href="{download_url}">Télécharger la nouvelle version</a>')
+            msg.setTextFormat(Qt.RichText)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec()
+
+        except Exception as e:
+            self.logger.warning(f"Update check failed: {e}")
