@@ -6,6 +6,12 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
 ![License](https://img.shields.io/badge/License-Unlicense-red)
 
+# How to Install
+
+1. Download the .exe from https://github.com/RaiZiStyle/yt-dlp-gui/releases/latest
+2. Launch the .exe to install the application
+3. Launch the application `yt-dlp-gui`
+
 # References : 
 
 - https://github.com/yt-dlp/yt-dlp
@@ -15,10 +21,9 @@ Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 
 # TODO DEV : 
 
-- Help more sexy ? 
+- Help in th readme ? Or a gif on how to use the app ? 
 - Issue template in github
 - English & french translate ? 
-<!-- - In about, show where the software is installed  -->
 
 # Info in the README for user : 
 
