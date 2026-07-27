@@ -7,6 +7,7 @@ from enum import Enum
 from typing import Callable, Optional, Any, cast
 
 
+
 import yt_dlp
 from yt_dlp.utils import DownloadError
 
@@ -17,7 +18,7 @@ class E_QUERY_TYPE(Enum):
     AUDIO = 2
 
 
-class YoutubeDL_interface:
+class YoutubeDL_interface():
     FORMAT_FIELDS = {
         "format_id": "",
         "filesize": 0,
@@ -34,7 +35,7 @@ class YoutubeDL_interface:
     VIDEO_FIELD = {"title": "", "channel": "", "duration": 0, "thumbnail": ""}
 
     TIMEOUT = 5
-
+        
     def __init__(self) -> None:
         # No binary needed anymore, just keep the common options
         self.formats: list[dict] = []
@@ -130,6 +131,7 @@ class YoutubeDL_interface:
             with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:  # Trick for pylance to be happy with the type.
                 self.logger.info(f"Query url : {url}")
                 info = ydl.extract_info(url, download=False)
+                self.info = info # God, this is not C.. Rip memory
             self.logger.info("Query succeeded")
         except DownloadError as e:
             self.logger.error(f"DownloadError : {e}")
@@ -188,11 +190,19 @@ class YoutubeDL_interface:
             self.logger.error("Error : unknown query type")
             return
 
+        # See if the file can be downloaded
+        with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
+            newfile = ydl.prepare_filename(self.info)
+            if Path(newfile).exists():
+                raise Exception("Fichier déja existant")
+                     
         try:
             with yt_dlp.YoutubeDL(cast(Any, ydl_opts)) as ydl:
                 ydl.download([url])
         except DownloadError as e:
             self.logger.error(f"Error during download : {e}")
+        except Exception as e:
+            self.logger.error(f"Error unknown : {e}")
 
     def set_progress_callback(self, callback: Optional[Callable[[dict], None]]) -> None:
         """Call this from the Qt side to wire up a QProgressBar / Qt signal.
