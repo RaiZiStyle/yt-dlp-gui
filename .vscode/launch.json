@@ -10,7 +10,8 @@
             "request": "launch",
             "program": "src/main.py",
             "env": {
-                "DISPLAY": "localhost:10.0"
+                // "DISPLAY": "localhost:10.0"
+                "DISPLAY": "192.168.1.197:0.0"
             }
         },
         {
