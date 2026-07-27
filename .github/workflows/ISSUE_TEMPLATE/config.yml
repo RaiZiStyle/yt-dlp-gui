@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discussion générale
+    url: https://github.com/RaiZiStyle/yt-dlp-gui/discussions
+    about: Pour toute question qui ne rentre pas dans les catégories ci-dessus.
