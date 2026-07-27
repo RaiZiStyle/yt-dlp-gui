@@ -29,7 +29,7 @@ class AboutDialog(QDialog):
         header.setSpacing(14)
         
         pixmap = QPixmap()
-        pixmap.loadFromData(get_asset("icon.png").open("rb").read())
+        pixmap.loadFromData(get_asset("icon.ico").open("rb").read())
 
         # Redimensionner pour tenir dans le label sans déformer
         pixmap = pixmap.scaled(
