@@ -22,8 +22,7 @@ Supported site : https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md
 # TODO DEV : 
 
 - Help in th readme ? Or a gif on how to use the app ? 
-- Issue template in github
-- English & french translate ? 
+- Make a way to compile localy and produce an .exe so I don't produce a release for every change I make.
 
 # Info in the README for user : 
 

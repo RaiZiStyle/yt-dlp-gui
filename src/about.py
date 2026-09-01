@@ -193,7 +193,7 @@ class AboutDialog(QDialog):
     # I'm lazy... it's call from a connect and i forgot how to give parameter to a connect. 
     def open_log_folder(self, ):
         folder_path = self.get_installation_folder() + "/_internal/" + LOGGER_FILENAME
-        subprocess.run(["explorer", "/select,", str(folder_path)])
+        subprocess.run(["explorer", f"/select,{str(folder_path)}"])
         
     def _separator(self):
         line = QFrame()
