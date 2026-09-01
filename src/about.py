@@ -12,6 +12,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QIcon, QPixmap
 from pathlib import Path
 import sys
+import subprocess
 
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
@@ -188,10 +189,11 @@ class AboutDialog(QDialog):
     def open_installation_folder(self, ):
         folder_path = self.get_installation_folder()
         QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
+
     # I'm lazy... it's call from a connect and i forgot how to give parameter to a connect. 
     def open_log_folder(self, ):
         folder_path = self.get_installation_folder() + "/_internal/" + LOGGER_FILENAME
-        QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
+        subprocess.run(["explorer", "/select,", str(folder_path)])
         
     def _separator(self):
         line = QFrame()
