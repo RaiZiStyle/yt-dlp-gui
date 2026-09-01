@@ -1,6 +1,6 @@
 # about_dialog.py
 from version import __version__
-from utils import get_asset
+from utils import get_asset, LOGGER_FILENAME
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
@@ -72,8 +72,27 @@ class AboutDialog(QDialog):
         install_path_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(install_path_value)
 
-        open_folder_button = QPushButton("Ouvrir le dossier")
+        open_folder_button = QPushButton("Ouvrir le dossier d'installation")
         open_folder_button.clicked.connect(self.open_installation_folder)
+        layout.addWidget(open_folder_button)
+        
+
+        layout.addSpacing(16)
+        layout.addWidget(self._separator())
+        layout.addSpacing(12)
+        
+        # Log Path
+        log_path_label = QLabel("Chemin des fichiers de logs :")
+        log_path_label.setStyleSheet("font-size: 14px; margin-top: 10px;")
+        layout.addWidget(log_path_label)
+
+        log_path_value = QLabel(self.get_installation_folder() + "/_internal/" + LOGGER_FILENAME)
+        log_path_value.setStyleSheet("font-size: 12px; color: gray;")
+        log_path_value.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(log_path_value)
+
+        open_folder_button = QPushButton("Ouvrir le dossier de logs")
+        open_folder_button.clicked.connect((self.open_log_folder ))
         layout.addWidget(open_folder_button)
         
 
@@ -166,8 +185,12 @@ class AboutDialog(QDialog):
         else:  # Mode développement
             return str(Path(__file__).parent)
 
-    def open_installation_folder(self):
+    def open_installation_folder(self, ):
         folder_path = self.get_installation_folder()
+        QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
+    # I'm lazy... it's call from a connect and i forgot how to give parameter to a connect. 
+    def open_log_folder(self, ):
+        folder_path = self.get_installation_folder() + "/_internal/" + LOGGER_FILENAME
         QDesktopServices.openUrl(QUrl.fromLocalFile(folder_path))
         
     def _separator(self):

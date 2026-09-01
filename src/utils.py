@@ -6,7 +6,7 @@ import os
 import sys
 
 _logger_configured = False
-
+LOGGER_FILENAME = "yt-dlp-gui.log"
 
 def get_logger(name: str | None = None) -> Logger:
     global _logger_configured
@@ -26,7 +26,7 @@ def get_logger(name: str | None = None) -> Logger:
         # root_logger.addHandler(console_handler)
 
         # Handler file
-        log_path = os.path.join(os.path.dirname(__file__), "yt-dlp-gui.log")
+        log_path = os.path.join(os.path.dirname(__file__), LOGGER_FILENAME)
         file_handler = FileHandler(log_path, mode="a", encoding="utf-8")
         file_handler.setLevel(DEBUG)
         file_handler.setFormatter(formatter)
