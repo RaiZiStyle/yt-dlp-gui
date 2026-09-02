@@ -63,7 +63,11 @@ jobs:
       - name: Build installer with Inno Setup
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            "${{ github.event.inputs.version }}"
+          } else {
+            "${{ github.ref_name }}".TrimStart("v")
+          }
           $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
           & $isccPath /DMyAppVersion="$version" installer\setup.iss
 

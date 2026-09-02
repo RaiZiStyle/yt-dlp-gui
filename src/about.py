@@ -1,6 +1,6 @@
 # about_dialog.py
 from version import __version__
-from utils import get_asset, LOGGER_FILENAME
+from utils import get_asset, LOGGER_FILENAME, get_logger
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout,
@@ -17,6 +17,7 @@ import subprocess
 class AboutDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.logger = get_logger(AboutDialog.__name__)
         self.setWindowTitle("À propos")
         self.setFixedWidth(420)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
@@ -194,7 +195,7 @@ class AboutDialog(QDialog):
     def open_log_folder(self, ):
         folder_path = self.get_installation_folder() + "/_internal/" + LOGGER_FILENAME
         argument = ["explorer", f"/select,{str(folder_path)}"]
-        print(f"stuff: {argument}")
+        self.logger.debug(f"stuff: {argument}")
         subprocess.run(argument)
         
     def _separator(self):
