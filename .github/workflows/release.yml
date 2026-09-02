@@ -4,8 +4,13 @@ on:
   push:
     tags:
       - 'v*'          # déclenche uniquement sur un tag : git tag v1.0.0 && git push origin v1.0.0
-
-
+  workflow_dispatch:          
+    inputs:
+      version:
+        description: 'Version string (ex: 1.2.3-debug)'
+        default: '0.0.0-dev'
+        required: false
+    
 permissions:
   contents: write
 
@@ -32,9 +37,13 @@ jobs:
       - name: Inject version from git tag in src/version.py
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            "${{ github.event.inputs.version }}"
+          } else {
+            "${{ github.ref_name }}".TrimStart("v")
+          }
           (Get-Content src/version.py) -replace '"dev"', "`"$version`"" | Set-Content src/version.py
-          cat src/version.py   # vérification dans les logs CI
+          cat src/version.py
 
       - name: Build with PyInstaller
         run: pyinstaller --noconfirm yt-dlp-gui.spec
@@ -59,7 +68,15 @@ jobs:
           & $isccPath /DMyAppVersion="$version" installer\setup.iss
 
       - name: Upload installer to GitHub Release
+        if: github.event_name == 'push'   
         uses: softprops/action-gh-release@v2
         with:
           files: installer_output/yt-dlp-gui-setup*.exe
-          generate_release_notes: true   # génère automatiquement les release notes depuis les commits
+          generate_release_notes: true  # génère automatiquement les release notes depuis les commits
+
+      - name: Upload artifact (debug build)
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: yt-dlp-gui-debug
+          path: installer_output/yt-dlp-gui-setup*.exe      
